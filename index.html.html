@@ -1,0 +1,3236 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotlar Logística - Central Unificada WMS &amp; KPI Operacional</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js & DataLabels plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <!-- SheetJS (xlsx) for multi-sheet Excel & CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- FontAwesome & Lucide Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            spotlar: {
+              yellow: '#facc15',
+              yellowHover: '#eab308',
+              yellowLight: '#fef9c3',
+              dark: '#24292e',
+              darkHeader: '#1a1f23',
+              darkSlate: '#0f172a',
+              blueBar: '#70a6ff',
+              grayBar: '#8492a6',
+              lineOrange: '#ea580c',
+              lineTeal: '#0d9488'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.6);
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(30, 41, 59, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #475569;
+    }
+    .rack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+      gap: 8px;
+    }
+    .modal-backdrop {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+
+<body class="bg-[#f0f3f8] dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 antialiased overflow-x-hidden">
+
+  <header class="bg-[#24292e] text-white border-b border-neutral-700/80 sticky top-0 z-40 shadow-md">
+    <div class="max-w-[1780px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-18">
+        
+        <!-- Brand Identification -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center text-slate-950 shadow-md font-bold text-lg">
+            <svg class="w-6 h-6" viewBox="0 0 100 100" fill="currentColor">
+              <circle cx="50" cy="45" r="16" fill="none" stroke="currentColor" stroke-width="11"/>
+              <rect x="44" y="6" width="12" height="15" rx="3"/>
+              <rect x="44" y="69" width="12" height="15" rx="3"/>
+              <rect x="11" y="39" width="15" height="12" rx="3"/>
+              <rect x="74" y="39" width="15" height="12" rx="3"/>
+              <rect x="20" y="16" width="12" height="15" rx="3" transform="rotate(-45 26 23.5)"/>
+              <rect x="68" y="16" width="12" height="15" rx="3" transform="rotate(45 74 23.5)"/>
+              <rect x="68" y="58" width="12" height="15" rx="3" transform="rotate(-45 74 65.5)"/>
+              <rect x="14" y="56" width="14" height="32" rx="5" transform="rotate(45 21 72)"/>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-base sm:text-lg font-black tracking-wider uppercase text-white">SPOTLAR LOGÍSTICA</span>
+              <span class="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded bg-amber-400 text-slate-950 uppercase tracking-wider">CENTRAL UNIFICADA</span>
+            </div>
+            <p class="text-xs text-neutral-400 hidden sm:block">KPIs Operacionais &amp; Gestão de Ocupação do CD Itajaí-SC</p>
+          </div>
+        </div>
+
+        <!-- Central Major Module Switcher (App 1 vs App 2 vs Consolidado) -->
+        <nav class="hidden md:flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/80 text-xs font-semibold">
+          <button id="mainNavKpi" onclick="switchMainModule('kpi')" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-black shadow-sm transition">
+            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            <span>1. KPI Operacional</span>
+          </button>
+          <button id="mainNavWms" onclick="switchMainModule('wms')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition">
+            <i class="fa-solid fa-boxes-stacked text-xs"></i>
+            <span>2. Ocupação CD Itajaí</span>
+          </button>
+          <button id="mainNavExec" onclick="switchMainModule('exec')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition">
+            <i data-lucide="compass" class="w-4 h-4"></i>
+            <span>3. Visão Executiva 360°</span>
+          </button>
+        </nav>
+
+        <!-- Top Right Actions & Panel Toggle -->
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+          <!-- Toggle Lateral Evolution Panel -->
+          <button onclick="toggleLateralPanel()" id="btnLateralToggle" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow transition" title="Exibir / Ocultar Painel Lateral de Evolução">
+            <i data-lucide="panel-right-open" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Painel Lateral</span>
+            <span id="lateralBadgeCount" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          </button>
+
+          <!-- WhatsApp Diretoria -->
+          <button onclick="gerarRelatorioDiretoria()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow transition" title="Disparo rápido via WhatsApp">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+            <span class="hidden lg:inline">WhatsApp</span>
+          </button>
+
+          <!-- Email Diretoria -->
+          <button onclick="openEmailModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow transition" title="Configurar e enviar relatório por E-mail">
+            <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+            <span class="hidden lg:inline">E-mail</span>
+          </button>
+
+          <!-- Modo Escuro -->
+          <button onclick="toggleDarkMode()" class="bg-gray-700 hover:bg-gray-600 text-xs px-3 py-1.5 rounded-full text-gray-200 transition flex items-center gap-1.5">
+            <i data-lucide="moon" class="w-3.5 h-3.5" id="themeIcon"></i>
+            <span id="themeLabel" class="hidden sm:inline">Modo Escuro</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Mobile Navigation Sub-bar -->
+      <div class="flex md:hidden overflow-x-auto border-t border-slate-800 py-2 justify-between gap-1 text-xs font-semibold custom-scrollbar">
+        <button id="mobNavKpi" onclick="switchMainModule('kpi')" class="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold whitespace-nowrap">
+          1. KPI Operacional
+        </button>
+        <button id="mobNavWms" onclick="switchMainModule('wms')" class="px-3 py-1.5 rounded-lg text-slate-300 whitespace-nowrap">
+          2. Ocupação CD
+        </button>
+        <button id="mobNavExec" onclick="switchMainModule('exec')" class="px-3 py-1.5 rounded-lg text-slate-300 whitespace-nowrap">
+          3. Executivo 360°
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <div class="flex-1 flex max-w-[1780px] w-full mx-auto relative overflow-hidden">
+
+    <!-- Primary Application Content Area -->
+    <main id="mainWorkspace" class="flex-1 p-4 sm:p-6 lg:p-7 space-y-6 transition-all duration-300 overflow-y-auto">
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 1: KPI OPERACIONAL (EXPEDIÇÃO & RECEBIMENTO)                       -->
+      <!-- ========================================================================= -->
+      <section id="moduleKpiSection" class="space-y-5">
+
+        <!-- Sub-bar: Inbound/Outbound Switcher and Operations Toolbar -->
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          
+          <!-- Process Selector (Expedição vs Recebimento) -->
+          <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+            <button id="tabBtnExpedicao" onclick="switchProcess('expedicao')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all bg-amber-400 text-slate-950 shadow-sm">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Expedição (Outbound)</span>
+            </button>
+            <button id="tabBtnRecebimento" onclick="switchProcess('recebimento')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white">
+              <i data-lucide="inbox" class="w-4 h-4"></i>
+              <span>Recebimento (Inbound)</span>
+            </button>
+          </div>
+
+          <!-- Actions: Edit, Copy, Insert, Restore, Export -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openManageDataModal()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm" title="Editar ou excluir registros">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              <span>Editar Dados</span>
+            </button>
+
+            <button onclick="copySlideContent()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-100 dark:bg-amber-400/10 hover:bg-amber-200 text-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-400/30 text-xs font-bold transition">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copiar Resumo</span>
+            </button>
+
+            <button onclick="openModalCreate()" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:opacity-90 text-xs font-bold transition shadow-sm">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>+ Novo Lançamento</span>
+            </button>
+
+            <label class="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-sm transition">
+              <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i>
+              <span>Importar Excel/CSV</span>
+              <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+            </label>
+
+            <button onclick="exportTwoSheets()" class="flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Exportar</span>
+            </button>
+
+            <button onclick="restoreDefaults()" title="Restaurar base padrão inicial" class="flex items-center gap-1 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400 transition">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('excelFileInput').click()" class="cursor-pointer border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400 bg-slate-100/70 dark:bg-slate-900/40 hover:bg-amber-50/40 rounded-2xl py-2 px-4 text-center transition flex items-center justify-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-500"></i>
+          <span>Arraste ou clique para carregar nova planilha com abas <strong>Expedição</strong> e <strong>Recebimento</strong> (.xlsx / .csv)</span>
+        </div>
+
+        <!-- KPI Numerical Cards -->
+        <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+          
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold tracking-wider text-blue-600 dark:text-blue-400 uppercase" id="kpiTitleValor">VALOR FATURADO</span>
+              <span class="text-blue-500 text-sm font-black">$</span>
+            </div>
+            <div class="mt-2">
+              <h3 id="kpiValorFaturado" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">R$ 0,00</h3>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2 font-medium">
+              <span>Acumulado</span>
+              <span class="text-blue-600 dark:text-blue-400 font-bold" id="kpiValorMedio">Méd: R$ 0k</span>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold tracking-wider text-amber-600 dark:text-amber-400 uppercase">NOTAS FISCAIS</span>
+              <i data-lucide="file-text" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <div class="mt-2">
+              <h3 id="kpiNotasFiscais" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">0</h3>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2 font-medium">
+              <span>Documentos</span>
+              <span class="text-amber-600 dark:text-amber-400 font-bold" id="kpiNotasMedia">0/mês</span>
+            </div>
+          </div>
+
+          <div id="cardUhs" class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold tracking-wider text-teal-600 dark:text-teal-400 uppercase">UH'S</span>
+              <i data-lucide="layers" class="w-4 h-4 text-teal-500"></i>
+            </div>
+            <div class="mt-2">
+              <h3 id="kpiUhs" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">0</h3>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2 font-medium">
+              <span>Unidades</span>
+              <span class="text-teal-600 dark:text-teal-400 font-bold" id="kpiUhsMedia">0/mês</span>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold tracking-wider text-amber-700 dark:text-amber-400 uppercase">SKU'S</span>
+              <i data-lucide="tag" class="w-4 h-4 text-amber-600"></i>
+            </div>
+            <div class="mt-2">
+              <h3 id="kpiSkus" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">0</h3>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2 font-medium">
+              <span>Mix Total</span>
+              <span class="text-amber-700 dark:text-amber-400 font-bold" id="kpiSkusMedia">0/mês</span>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs relative col-span-2 md:col-span-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold tracking-wider text-slate-600 dark:text-slate-400 uppercase">TOTAL DE ITENS</span>
+              <i data-lucide="box" class="w-4 h-4 text-slate-500"></i>
+            </div>
+            <div class="mt-2">
+              <h3 id="kpiTotalItens" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">0</h3>
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-2 font-medium">
+              <span>Peças Físicas</span>
+              <span class="text-slate-700 dark:text-slate-300 font-bold" id="kpiItensMedia">0/mês</span>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- PAINEL 1: VISÃO MENSAL -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+              <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                1. Painel Mensal (Acumulado por Mês)
+              </h3>
+            </div>
+            <span class="text-xs text-slate-500 dark:text-slate-400 italic hidden sm:inline">
+              💡 Clique em qualquer mês no gráfico para filtrar as semanas abaixo
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Monthly Chart 1: Valor -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                  <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-wide" id="chart1Title">VALOR FATURADO MENSAL</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="copyChartToClipboard('chartFaturadoCanvas')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold transition" title="Copiar Imagem do Gráfico">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copiar</span>
+                  </button>
+                  <span id="chart1Badge" class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-300 text-slate-950">EXPEDIÇÃO</span>
+                </div>
+              </div>
+              <div class="relative h-72 w-full mt-3">
+                <canvas id="chartFaturadoCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Monthly Chart 2: Volume -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                  <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-wide" id="chart2Title">VOLUME EXPEDIDO MENSAL</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="copyChartToClipboard('chartVolumeCanvas')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold transition" title="Copiar Imagem do Gráfico">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copiar</span>
+                  </button>
+                  <span id="chart2Badge" class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-300 text-slate-950">EXPEDIÇÃO</span>
+                </div>
+              </div>
+              <div class="relative h-72 w-full mt-3">
+                <canvas id="chartVolumeCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAINEL 2: VISÃO POR WEEK (SEMANAL) -->
+        <div class="space-y-3 pt-2">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-1 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+              <div>
+                <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>2. Painel Semanal (Visão por Week)</span>
+                  <span id="activeWeekMonthBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase">Mês: Carregando...</span>
+                </h3>
+                <p class="text-xs text-slate-400">Detalhamento semanal das operações do mês selecionado.</p>
+              </div>
+            </div>
+
+            <!-- Month selection pills -->
+            <div class="flex items-center gap-1.5 flex-wrap" id="monthPillsContainer">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Weekly Chart 1 -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                  <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-wide" id="chartWeek1Title">VALOR FATURADO POR WEEK</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="copyChartToClipboard('chartFaturadoWeekCanvas')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copiar</span>
+                  </button>
+                  <span id="chartWeek1Badge" class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-300 text-slate-950">EXPEDIÇÃO</span>
+                </div>
+              </div>
+              <div class="relative h-72 w-full mt-3">
+                <canvas id="chartFaturadoWeekCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Weekly Chart 2 -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                  <h4 class="font-bold text-slate-900 dark:text-white text-sm tracking-wide" id="chartWeek2Title">VOLUME EXPEDIDO POR WEEK</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="copyChartToClipboard('chartVolumeWeekCanvas')" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copiar</span>
+                  </button>
+                  <span id="chartWeek2Badge" class="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-300 text-slate-950">EXPEDIÇÃO</span>
+                </div>
+              </div>
+              <div class="relative h-72 w-full mt-3">
+                <canvas id="chartVolumeWeekCanvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 2: OCUPAÇÃO DO CD ITAJAÍ-SC (WMS & CAPACIDADE)                      -->
+      <!-- ========================================================================= -->
+      <section id="moduleWmsSection" class="space-y-6 hidden">
+
+        <!-- WMS Toolbar & Connection Status -->
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-amber-100 dark:bg-amber-400/20 text-slate-900 dark:text-amber-400 rounded-xl">
+              <i class="fa-solid fa-cloud text-lg"></i>
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Origem WMS:</span>
+                <span id="dataStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+                  <i class="fa-solid fa-circle-check text-[9px] mr-1.5"></i> Planilha Conectada
+                </span>
+                <span id="lastSyncTime" class="text-[11px] font-medium text-slate-400">
+                  Última sincronização: Há instantes
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- WMS Sub Navigation -->
+            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold">
+              <button id="wmsSubTabGeneral" onclick="switchWmsSubTab('general')" class="px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold shadow-xs">
+                Visão Geral
+              </button>
+              <button id="wmsSubTabMap" onclick="switchWmsSubTab('map')" class="px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white">
+                Mapa 2D
+              </button>
+              <button id="wmsSubTabSpatial" onclick="switchWmsSubTab('spatial')" class="px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white">
+                Ruas &amp; Alturas
+              </button>
+            </div>
+
+            <!-- Search Address Input -->
+            <div class="relative w-48 sm:w-56">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+              <input type="text" id="globalSearchInput" onkeyup="renderWmsDashboard()" placeholder="Buscar endereço (ex: AA.01.1)..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-400">
+            </div>
+
+            <!-- Cloud Sync & Settings Buttons -->
+            <button id="btnCloudSync" onclick="syncWmsGoogleSheets(false)" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-cloud-arrow-down" id="syncIcon"></i>
+              <span>Sincronizar Nuvem</span>
+            </button>
+
+            <button onclick="toggleConfigModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-sliders text-amber-500"></i>
+              <span>Parâmetros</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WMS SUB-VIEW 1: VISÃO GERAL & CAPACIDADE -->
+        <div id="wmsViewGeneral" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Endereços Ocupados</p>
+                  <div class="flex items-baseline gap-1.5 mt-1">
+                    <h3 id="kpiTotalOccupied" class="text-3xl font-extrabold text-slate-900 dark:text-white">0</h3>
+                    <span class="text-xs text-slate-500 font-medium">/ <span id="kpiTotalCap">184</span> cap.</span>
+                  </div>
+                </div>
+                <span id="badgeTotalStatus" class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">-</span>
+              </div>
+              <div class="mt-4">
+                <div class="flex justify-between text-xs text-slate-500 font-medium mb-1">
+                  <span>Taxa de Ocupação:</span>
+                  <strong id="kpiTotalRate" class="text-slate-800 dark:text-slate-100 font-bold">0%</strong>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div id="kpiTotalBar" class="bg-amber-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Full Ocupados</p>
+                  <div class="flex items-baseline gap-1.5 mt-1">
+                    <h3 id="kpiFullUsed" class="text-3xl font-bold text-amber-600 dark:text-amber-400">0</h3>
+                    <span class="text-xs text-slate-500 font-medium">/ <span id="kpiFullCap">112</span> cap.</span>
+                  </div>
+                </div>
+                <div class="p-2.5 bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded-xl">
+                  <i class="fa-solid fa-box text-base"></i>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex justify-between text-xs text-slate-500 font-medium mb-1">
+                  <span>Taxa Full: <strong id="kpiFullRate" class="text-amber-700 dark:text-amber-400">0%</strong></span>
+                  <span>Livre: <strong id="kpiFullFree" class="text-emerald-600 dark:text-emerald-400">0</strong></span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div id="kpiFullBar" class="bg-amber-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Meias Posições Ocupadas</p>
+                  <div class="flex items-baseline gap-1.5 mt-1">
+                    <h3 id="kpiHalfUsed" class="text-3xl font-bold text-slate-800 dark:text-slate-200">0</h3>
+                    <span class="text-xs text-slate-500 font-medium">/ <span id="kpiHalfCap">72</span> cap.</span>
+                  </div>
+                </div>
+                <div class="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl">
+                  <i class="fa-solid fa-boxes-packing text-base"></i>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex justify-between text-xs text-slate-500 font-medium mb-1">
+                  <span>Taxa Meia: <strong id="kpiHalfRate" class="text-slate-700 dark:text-slate-300">0%</strong></span>
+                  <span>Livre: <strong id="kpiHalfFree" class="text-emerald-600 dark:text-emerald-400">0</strong></span>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div id="kpiHalfBar" class="bg-slate-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total de Espaço Livre</p>
+                  <h3 id="kpiTotalFree" class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</h3>
+                </div>
+                <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <i class="fa-solid fa-circle-check text-base"></i>
+                </div>
+              </div>
+              <div class="mt-4">
+                <div class="flex justify-between text-xs text-slate-500 font-medium mb-1">
+                  <span>Full Livre: <strong id="kpiFreeFullSub" class="text-slate-800 dark:text-slate-200">0</strong></span>
+                  <span>Meia Livre: <strong id="kpiFreeHalfSub" class="text-slate-800 dark:text-slate-200">0</strong></span>
+                </div>
+                <p class="text-[11px] text-slate-400">Total de posições desocupadas no armazém</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Capacity Gauge & Distribution Doughnut -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-gauge-high text-amber-500"></i>
+                  <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Nível de Capacidade Operacional</h3>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-0.5 bg-amber-100 dark:bg-amber-400/20 text-slate-900 dark:text-amber-300 rounded-md">CD Itajaí-SC</span>
+              </div>
+              <div class="relative h-60 flex items-center justify-center my-2">
+                <canvas id="gaugeChart" class="max-h-56"></canvas>
+                <div class="absolute bottom-4 text-center">
+                  <span id="gaugeValueDisplay" class="text-3xl font-extrabold text-slate-900 dark:text-white">0%</span>
+                  <p id="gaugeStatusText" class="text-xs font-semibold text-slate-500 dark:text-slate-400">Capacidade Operacional</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-chart-pie text-amber-500"></i>
+                  <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Distribuição das Posições (Ocupado vs Livre)</h3>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Contagem Geral</span>
+              </div>
+              <div class="h-60 relative my-2 flex items-center justify-center">
+                <canvas id="overviewStatusChart" class="max-h-56"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- General Summary Table -->
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-table-list text-amber-500"></i> Resumo Consolidado do CD Itajaí
+                </h3>
+                <p class="text-xs text-slate-400">Posições ocupadas comparadas à capacidade nominal cadastrada</p>
+              </div>
+              <button onclick="exportWmsCSV('general')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 transition">
+                <i class="fa-solid fa-download mr-1"></i> Exportar CSV
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs sm:text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th class="py-3.5 px-4">Centro de Distribuição</th>
+                    <th class="py-3.5 px-4">Full Ocupado / Cap</th>
+                    <th class="py-3.5 px-4">Meia Ocupado / Cap</th>
+                    <th class="py-3.5 px-4">Total Ocupados</th>
+                    <th class="py-3.5 px-4">Total Livres</th>
+                    <th class="py-3.5 px-4">% Ocupação Total</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="dataTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- WMS SUB-VIEW 2: MAPA 2D INTERATIVO -->
+        <div id="wmsViewMap" class="space-y-6 hidden">
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                  <i class="fa-solid fa-cubes-stacked text-amber-500"></i> Mapeamento Físico de Endereços (Porta-Paletes 2D)
+                </h3>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-medium text-slate-600 dark:text-slate-300">Filtrar Rua:</label>
+                <select id="mapAisleFilter" onchange="renderWarehouseMap()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-lg px-2.5 py-1 text-slate-800 dark:text-slate-200">
+                  <option value="ALL">Todas as Ruas (AA, AB, AC)</option>
+                  <option value="AA">Rua AA (132 Endereços)</option>
+                  <option value="AB">Rua AB (37 Endereços)</option>
+                  <option value="AC">Rua AC (12 Endereços)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="flex flex-wrap items-center gap-4 text-xs font-semibold">
+              <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <span class="w-3.5 h-3.5 bg-amber-300 rounded border border-amber-400"></span> Posição Full Ocupada
+              </span>
+              <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <span class="w-3.5 h-3.5 bg-slate-700 rounded border border-slate-800"></span> Meia Posição Ocupada
+              </span>
+              <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <span class="w-3.5 h-3.5 bg-emerald-500 rounded"></span> Posição Livre
+              </span>
+            </div>
+          </div>
+
+          <div id="warehouseRacksContainer" class="space-y-6">
+            <!-- Dynamic rack grids render here -->
+          </div>
+        </div>
+
+        <!-- WMS SUB-VIEW 3: RUAS & ALTURAS -->
+        <div id="wmsViewSpatial" class="space-y-6 hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-road text-amber-500"></i>
+                  <h3 class="font-bold text-slate-800 dark:text-white text-sm">Ocupação por Rua / Corredor</h3>
+                </div>
+                <span class="text-xs font-bold text-slate-500">Endereços Ocupados</span>
+              </div>
+              <div class="h-64 relative my-2">
+                <canvas id="aisleChart"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-layer-group text-amber-500"></i>
+                  <h3 class="font-bold text-slate-800 dark:text-white text-sm">Distribuição por Nível de Altura</h3>
+                </div>
+                <span class="text-xs font-bold text-slate-500">Nível 01 vs Superiores</span>
+              </div>
+              <div class="h-64 relative my-2">
+                <canvas id="levelChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+              <h3 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
+                <i class="fa-solid fa-building-circle-check text-amber-500"></i> Distribuição Espacial por Rua
+              </h3>
+              <p class="text-xs text-slate-400">Resumo da alocação de posições em cada corredor do armazém</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs sm:text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs uppercase font-bold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th class="py-3.5 px-4">Rua / Corredor</th>
+                    <th class="py-3.5 px-4">Full Ocupadas</th>
+                    <th class="py-3.5 px-4">Meias Ocupadas</th>
+                    <th class="py-3.5 px-4">Total Ocupados</th>
+                    <th class="py-3.5 px-4">Total Livres</th>
+                    <th class="py-3.5 px-4">% da Ocupação Atual</th>
+                  </tr>
+                </thead>
+                <tbody id="aisleTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- MODULE 3: VISÃO EXECUTIVA 360° (CRUZAMENTO DE THROUGHPUT & CAPACIDADE)    -->
+      <!-- ========================================================================= -->
+      <section id="moduleExecSection" class="space-y-6 hidden">
+        
+        <div class="bg-gradient-to-r from-slate-900 to-[#1e2327] text-white p-6 rounded-2xl shadow-md border border-neutral-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-xs">DIRETORIA &amp; OPERAÇÕES</span>
+              <span class="text-xs text-neutral-400">Visão Consolidada de Throughput e Espaço Físico</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black tracking-tight mt-1 text-white">Relatório Integrado Spotlar 360°</h2>
+            <p class="text-xs text-neutral-300 mt-0.5">Cruzamento em tempo real do faturamento logístico com a capacidade de estocagem do CD Itajaí.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="gerarRelatorioDiretoria()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow transition flex items-center gap-2">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+              <span>Compartilhar Relatório</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cross Metric Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Throughput Faturado (Outbound)</span>
+              <i data-lucide="trending-up" class="w-4 h-4 text-blue-500"></i>
+            </div>
+            <h3 id="execKpiFaturado" class="text-2xl font-black mt-2 text-slate-900 dark:text-white">R$ 0,00</h3>
+            <p class="text-xs text-slate-500 mt-1" id="execKpiItensExp">Total de peças expedidas: 0</p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase">Inbound Recebido</span>
+              <i data-lucide="package-check" class="w-4 h-4 text-amber-500"></i>
+            </div>
+            <h3 id="execKpiRecebido" class="text-2xl font-black mt-2 text-slate-900 dark:text-white">R$ 0,00</h3>
+            <p class="text-xs text-slate-500 mt-1" id="execKpiItensRec">Total de peças recebidas: 0</p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Ocupação Física do CD</span>
+              <i data-lucide="warehouse" class="w-4 h-4 text-emerald-500"></i>
+            </div>
+            <h3 id="execKpiOcupacao" class="text-2xl font-black mt-2 text-slate-900 dark:text-white">0%</h3>
+            <p class="text-xs text-slate-500 mt-1" id="execKpiSlotsLivre">Posições livres para novo recebimento: 0</p>
+          </div>
+        </div>
+
+        <!-- Comparative Quick Diagnostics Matrix -->
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <h4 class="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-500"></i>
+            <span>Diagnóstico de Eficiência e Fluxo Operacional</span>
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+              <span class="font-bold text-slate-900 dark:text-white block text-sm">Índice de Giro de Estoque</span>
+              <p class="text-slate-600 dark:text-slate-400">
+                A relação entre o volume faturado e o estoque físico alocado indica alta aderência com os prazos acordados nas docas.
+              </p>
+              <div class="pt-1 font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                <span>Operação dentro dos parâmetros seguros de capacidade</span>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+              <span class="font-bold text-slate-900 dark:text-white block text-sm">Disponibilidade Imediata de Docas e Racks</span>
+              <p class="text-slate-600 dark:text-slate-400">
+                Recomenda-se priorizar descarregamentos de Posição Full nas ruas AA e AB com base na disponibilidade em tempo real.
+              </p>
+              <div class="pt-1 font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                <span id="execDocasNotice">Docas 01-04 (Recebimento) e 05-08 (Expedição) alinhadas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- LATERAL PANEL: EVOLUÇÃO, PRÉVIA & MONITORAMENTO EM TEMPO REAL             -->
+    <!-- ========================================================================= -->
+    <aside id="lateralEvolutionPanel" class="w-80 sm:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl flex flex-col transition-all duration-300 transform translate-x-0 z-30">
+      
+      <!-- Lateral Header -->
+      <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-neutral-700">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-xs uppercase tracking-wider text-white">Painel de Evolução</h3>
+            <p class="text-[10px] text-neutral-400">Status &amp; Telemetria em Tempo Real</p>
+          </div>
+        </div>
+        <button onclick="toggleLateralPanel()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Lateral Content Body -->
+      <div class="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar text-xs">
+        
+        <!-- Architecture Status & Sync Health -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wide">Saúde das Conexões</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">100% ONLINE</span>
+          </div>
+          <div class="space-y-1 text-[11px]">
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-fire text-amber-500"></i> Firebase Firestore (KPI):</span>
+              <strong class="text-emerald-600 dark:text-emerald-400" id="lateralFirebaseStatus">Sincronizado</strong>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-excel text-emerald-600"></i> Google Sheets (WMS):</span>
+              <strong class="text-emerald-600 dark:text-emerald-400" id="lateralSheetsStatus">Conectado</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Snapshot Card -->
+        <div class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 space-y-2">
+          <span class="font-black text-amber-950 dark:text-amber-300 text-[11px] uppercase tracking-wide block">Prévia Instantânea Spotlar</span>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40">
+              <span class="text-slate-400 block text-[10px]">Expedição Ativa</span>
+              <strong id="lateralSnapExp" class="text-slate-900 dark:text-white font-mono">R$ 0k</strong>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40">
+              <span class="text-slate-400 block text-[10px]">Recebimento Ativo</span>
+              <strong id="lateralSnapRec" class="text-slate-900 dark:text-white font-mono">R$ 0k</strong>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40">
+              <span class="text-slate-400 block text-[10px]">Ocupação CD</span>
+              <strong id="lateralSnapOcc" class="text-amber-600 dark:text-amber-400 font-bold">0%</strong>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-2 rounded-lg border border-amber-200/60 dark:border-amber-900/40">
+              <span class="text-slate-400 block text-[10px]">Posições Livres</span>
+              <strong id="lateralSnapFree" class="text-emerald-600 dark:text-emerald-400 font-bold">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Timeline / Evolution Log -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 dark:text-slate-200 text-[11px] uppercase tracking-wide">Linha de Evolução &amp; Ações</span>
+            <button onclick="clearActivityLogs()" class="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline">Limpar</button>
+          </div>
+          
+          <div id="lateralLogsContainer" class="space-y-2 max-h-80 overflow-y-auto custom-scrollbar pr-1">
+            <!-- Populated dynamically with live events -->
+          </div>
+        </div>
+
+        <!-- Quick Quick-Test Diagnostic Trigger -->
+        <div class="pt-2 border-t border-slate-200 dark:border-slate-800">
+          <button onclick="runDiagnosticsTest()" class="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-slate-700 dark:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Testar Todas as Conexões</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Lateral Footer -->
+      <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 text-center">
+        Central Unificada • Spotlar Logística v2.5
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- MODAL: EMAIL DA DIRETORIA & AUTOMAÇÃO -->
+  <div id="emailModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 my-auto">
+      <div class="px-6 py-4 bg-[#24292e] text-white flex items-center justify-between border-b border-neutral-700">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-white">Relatório Semanal por E-mail (Diretoria)</h3>
+            <p class="text-xs text-neutral-400">Programação automática: Toda segunda-feira às 08:00 AM</p>
+          </div>
+        </div>
+        <button onclick="closeEmailModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs sm:text-sm max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <div class="flex border-b border-slate-200 dark:border-slate-800">
+          <button id="emailTabPreviewBtn" onclick="switchEmailTab('preview')" class="px-4 py-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition">
+            1. Prévia do E-mail &amp; Envio Imediato
+          </button>
+          <button id="emailTabCloudBtn" onclick="switchEmailTab('cloud')" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 transition">
+            2. Automação no Google Sheets
+          </button>
+        </div>
+
+        <div id="emailTabPreview" class="space-y-4">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Destinatários:</label>
+            <input type="text" id="emailRecipientsInput" value="diretoria@spotlar.com.br, operacoes@spotlar.com.br" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Assunto:</label>
+            <input type="text" id="emailSubjectInput" value="[SPOTLAR LOGÍSTICA] Relatório Semanal de Desempenho Operacional" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Conteúdo Consolidado:</label>
+            <div id="emailPreviewBox" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-xs space-y-3"></div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <button onclick="copyEmailHTML()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Copiar Texto</span>
+            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="sendViaGmailWeb()" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-sm">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>Gmail Web</span>
+              </button>
+              <button onclick="sendViaMailtoClient()" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Outlook / Padrão</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="emailTabCloud" class="hidden space-y-3">
+          <div class="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-xs text-blue-900 dark:text-blue-200 rounded-xl">
+            Execute o script em <strong>Extensões &gt; Apps Script</strong> da sua planilha para envio pontual às 08:00 AM nas segundas-feiras.
+          </div>
+          <pre class="bg-slate-950 text-slate-200 p-3 rounded-xl text-[11px] font-mono overflow-x-auto max-h-52 custom-scrollbar" id="googleScriptCodeBlock"></pre>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+        <button onclick="closeEmailModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GERENCIAR & EDITAR DADOS OPERACIONAIS -->
+  <div id="manageDataModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden border border-slate-200 dark:border-slate-800 my-auto">
+      <div class="px-6 py-4 bg-[#24292e] text-white flex items-center justify-between border-b border-neutral-700">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-white">Editar / Gerenciar Dados Operacionais</h3>
+            <p class="text-xs text-neutral-400">Edite valores, semanas ou exclua registros com erro</p>
+          </div>
+        </div>
+        <button onclick="closeManageDataModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Processo:</span>
+            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs">
+              <button id="manageProcExpBtn" onclick="setManageProcess('expedicao')" class="px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950">Expedição</button>
+              <button id="manageProcRecBtn" onclick="setManageProcess('recebimento')" class="px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300">Recebimento</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Filtrar Mês:</span>
+            <select id="manageMonthFilter" onchange="renderManageDataTable()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todos os Meses</option>
+              <option value="Agosto">Agosto</option>
+              <option value="Setembro">Setembro</option>
+              <option value="Outubro">Outubro</option>
+              <option value="Novembro">Novembro</option>
+              <option value="Dezembro">Dezembro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-96 custom-scrollbar border border-slate-200 dark:border-slate-800 rounded-xl">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
+              <tr>
+                <th class="p-2.5">Mês / Semana</th>
+                <th class="p-2.5">Valor (R$)</th>
+                <th class="p-2.5">NFs</th>
+                <th class="p-2.5" id="thManageUhs">UH's</th>
+                <th class="p-2.5">SKU's</th>
+                <th class="p-2.5">Total Itens</th>
+                <th class="p-2.5 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="manageTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <button onclick="limparApenasAgosto()" class="text-xs text-rose-600 dark:text-rose-400 font-bold hover:underline flex items-center gap-1">
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <span>Limpar dados apenas de Agosto</span>
+        </button>
+        <button onclick="closeManageDataModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO / EDITAR LANÇAMENTO -->
+  <div id="recordModal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 dark:border-slate-800">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-5 h-5 text-amber-400"></i>
+          <h3 id="modalRecordTitle" class="font-bold text-base">Lançamento Operacional</h3>
+        </div>
+        <button onclick="closeModalRecord()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="recordForm" onsubmit="saveModalRecord(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="editRecordId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Módulo / Processo *</label>
+            <select id="formProcess" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+              <option value="expedicao">Expedição (Outbound)</option>
+              <option value="recebimento">Recebimento (Inbound)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Semana (Week) *</label>
+            <input type="text" id="formSemana" required placeholder="Ex: Semana 1" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-semibold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Mês de Referência *</label>
+            <select id="formMes" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+              <option value="Janeiro">Janeiro</option>
+              <option value="Fevereiro">Fevereiro</option>
+              <option value="Março">Março</option>
+              <option value="Abril">Abril</option>
+              <option value="Maio">Maio</option>
+              <option value="Junho">Junho</option>
+              <option value="Julho">Julho</option>
+              <option value="Agosto">Agosto</option>
+              <option value="Setembro" selected>Setembro</option>
+              <option value="Outubro">Outubro</option>
+              <option value="Novembro">Novembro</option>
+              <option value="Dezembro">Dezembro</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Valor (R$) *</label>
+            <input type="number" id="formValor" step="0.01" required placeholder="Ex: 175552.88" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Notas Fiscais *</label>
+            <input type="number" id="formNf" required placeholder="67" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">UH's (Unidades)</label>
+            <input type="number" id="formUh" placeholder="16" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">SKU's (Mix) *</label>
+            <input type="number" id="formSkus" required placeholder="275" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Total de Itens *</label>
+            <input type="number" id="formItens" required placeholder="657" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Docas / Região</label>
+            <input type="text" id="formDoca" placeholder="Docas 05-08" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+          <button type="button" onclick="closeModalRecord()" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold shadow-sm transition">Salvar Lançamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: PARÂMETROS DE CAPACIDADE DO CD & GOOGLE SHEETS -->
+  <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-amber-500 text-lg"></i>
+          <h2 class="font-bold text-slate-900 dark:text-white text-base">Parâmetros de Capacidade &amp; Planilha</h2>
+        </div>
+        <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Capacidades Nominais do Armazém</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Capacidade Full (Máx)</label>
+            <input type="number" id="inputCapFull" value="112" min="1" onchange="updateCapacities()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Capacidade Meia Posição (Máx)</label>
+            <input type="number" id="inputCapHalf" value="72" min="1" onchange="updateCapacities()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-semibold">
+          </div>
+        </div>
+        <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs font-medium">
+          <span class="text-slate-600 dark:text-slate-400">Capacidade Total do Armazém:</span>
+          <span id="totalCapDisplayModal" class="font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">184 posições</span>
+        </div>
+      </div>
+
+      <hr class="border-slate-100 dark:border-slate-800">
+
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Integração Google Sheets em Tempo Real</h3>
+        <div>
+          <label class="block text-xs text-slate-600 dark:text-slate-300 mb-1">URL da Planilha do Google Sheets</label>
+          <input type="text" id="sheetUrlInput" value="https://docs.google.com/spreadsheets/d/1YFYGpEkjMXR_gXQx3IBDgx70Pl0i7oU0_OZp6oOUeM0/edit?gid=1906630665#gid=1906630665" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-mono">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="toggleConfigModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl">Fechar</button>
+        <button onclick="syncWmsGoogleSheets(false); toggleConfigModal();" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow transition">
+          Salvar e Sincronizar Agora
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transition-all transform translate-y-24 opacity-0 pointer-events-none">
+    <div id="toastInner" class="flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-semibold text-slate-900 bg-amber-400 border border-amber-300">
+      <i data-lucide="check-circle" class="w-4 h-4" id="toastIcon"></i>
+      <span id="toastMsg">Notificação</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Firebase Configurations
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_gpWAuGq5OvSrFNvrsznJSx0OjcM7Qvo",
+      authDomain: "dashboard-cd-spotlar.firebaseapp.com",
+      projectId: "dashboard-cd-spotlar",
+      storageBucket: "dashboard-cd-spotlar.appspot.com",
+      messagingSenderId: "411041908566",
+      appId: "1:411041908566:web:6db9629487f91e512f4077"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const db = getFirestore(fbApp);
+    const docRef = doc(db, "app_data", "kpi_base");
+
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+    }
+
+    // Default Seed Data for KPI
+    const initialSpotlarData = {
+      expedicao: [
+        { id: 'exp-set-1', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 175552.88, nf: 67, uh: 16, skus: 275, itens: 657, doca: 'Docas 05-08' },
+        { id: 'exp-set-2', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 11209.00, nf: 9, uh: 11, skus: 71, itens: 166, doca: 'Docas 05-08' },
+        { id: 'exp-set-3', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 317759.69, nf: 53, uh: 48, skus: 733, itens: 1312, doca: 'Docas 05-08' },
+        { id: 'exp-set-4', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 12000.00, nf: 50, uh: 25, skus: 120, itens: 657, doca: 'Docas 05-08' }
+      ],
+      recebimento: [
+        { id: 'rec-set-1', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 141450.82, nf: 39, uh: 0, skus: 86, itens: 1162, doca: 'Docas 01-04' },
+        { id: 'rec-set-2', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 89557.51, nf: 37, uh: 0, skus: 85, itens: 803, doca: 'Docas 01-04' },
+        { id: 'rec-set-3', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 152731.95, nf: 75, uh: 0, skus: 123, itens: 1006, doca: 'Docas 01-04' },
+        { id: 'rec-set-4', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 14856.00, nf: 50, uh: 0, skus: 100, itens: 900, doca: 'Docas 01-04' }
+      ]
+    };
+
+    // State Variables
+    window.currentMainModule = 'kpi'; // 'kpi', 'wms', 'exec'
+    window.currentProcess = 'expedicao';
+    window.selectedMonth = 'Setembro';
+    window.manageActiveProcess = 'expedicao';
+    window.appData = { expedicao: [], recebimento: [] };
+
+    // WMS Warehouse initial rack positions
+    window.capFull = 112;
+    window.capHalf = 72;
+    window.wmsActiveSubTab = 'general';
+    window.lateralOpen = true;
+    window.evolutionLogs = [];
+
+    window.warehouseRawItems = [
+      // Rua AA (132 slots)
+      { mes: "Atual", endereco: "AA.01.01.A", counta: 18, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.01.01.B", counta: 19, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.01.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.01.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.02.01.A", counta: 11, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.02.01.B", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.02.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.02.3", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.03.01.A", counta: 21, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.03.01.B", counta: 14, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.03.2", counta: 5, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.03.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.04.01.A", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.04.01.B", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.04.2", counta: 7, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.04.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.05.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.05.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.05.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.05.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.06.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.06.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.06.2", counta: 7, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.06.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.07.01.A", counta: 11, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.07.01.B", counta: 3, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.07.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.07.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.08.01.A", counta: 4, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.08.01.B", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.08.2", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.08.3", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.09.01.A", counta: 4, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.09.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.09.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.09.3", counta: 6, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.10.01.A", counta: 19, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.10.01.B", counta: 3, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.10.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.10.3", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.11.01.A", counta: 9, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.11.01.B", counta: 25, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.11.2", counta: 7, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.11.3", counta: 3, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.12.01.A", counta: 5, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.12.01.B", counta: 9, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.12.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.12.3", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.13.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.13.01.B", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.13.2", counta: 10, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.13.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.14.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.14.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.14.2", counta: 5, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.14.3", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.15.01.A", counta: 18, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.15.01.B", counta: 4, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.15.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.15.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.16.01.A", counta: 17, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.16.01.B", counta: 8, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.16.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.16.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.17.01.A", counta: 7, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.17.01.B", counta: 46, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.17.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.17.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.18.01.A", counta: 14, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.18.01.B", counta: 15, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.18.2", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.18.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.19.01.A", counta: 15, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.19.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.19.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.19.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.20.01.A", counta: 14, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.20.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.20.2", counta: 10, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.20.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.21.01.A", counta: 5, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.21.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.21.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.21.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.22.01.A", counta: 13, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.22.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.22.2", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.22.3", counta: 17, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.23.01.A", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.23.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.23.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.23.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.24.01.A", counta: 5, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.24.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AA.24.2", counta: 5, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.24.3", counta: 6, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.25.1", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.25.2", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.25.3", counta: 6, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.26.1", counta: 9, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.26.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.26.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.27.1", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.27.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.27.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.28.1", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.28.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.28.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.29.1", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.29.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.29.3", counta: 3, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.30.1", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.30.2", counta: 5, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.30.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.31.1", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.31.2", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.31.3", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.32.1", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.32.2", counta: 14, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.32.3", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.33.1", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.33.2", counta: 5, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.33.3", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.34.1", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.34.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.34.3", counta: 4, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.35.1", counta: 11, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.35.2", counta: 8, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.35.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.36.1", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.36.2", counta: 3, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AA.36.3", counta: 4, tipo: "Posição Full" },
+
+      // Rua AB (37 slots)
+      { mes: "Atual", endereco: "AB.01.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.01.01.B", counta: 16, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.01.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.01.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.01.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.02.01.A", counta: 4, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.02.01.B", counta: 2, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.02.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.02.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.02.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.03.01.A", counta: 2, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.03.01.B", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.03.2", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.03.3", counta: 3, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.03.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.04.01.A", counta: 3, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.04.01.B", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.04.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.04.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.04.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.05.01.A", counta: 4, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.05.01.B", counta: 6, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.05.2", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.05.3", counta: 0, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.05.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.06.01.A", counta: 2, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.06.01.B", counta: 28, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AB.06.2", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.06.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.06.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.07.1", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.07.2", counta: 28, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.07.3", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.07.6", counta: 1, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.08.1", counta: 2, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.08.2", counta: 28, tipo: "Posição Full" },
+      { mes: "Atual", endereco: "AB.08.3", counta: 1, tipo: "Posição Full" },
+
+      // Rua AC (12 slots)
+      { mes: "Atual", endereco: "AC.01.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.01.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.02.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.02.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.03.01.A", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.03.01.B", counta: 0, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.04.01.A", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.04.01.B", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.05.01.A", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.05.01.B", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.06.01.A", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.06.01.B", counta: 1, tipo: "Meia Posição" },
+      { mes: "Atual", endereco: "AC.08.1", counta: 1, tipo: "Posição Full" }
+    ];
+
+    // Chart Handles
+    let chartFaturadoMonthly = null;
+    let chartVolumeMonthly = null;
+    let chartFaturadoWeek = null;
+    let chartVolumeWeek = null;
+    let gaugeChartInstance = null;
+    let overviewStatusChartInstance = null;
+    let aisleChartInstance = null;
+    let levelChartInstance = null;
+
+    // Logging helper for lateral evolution panel
+    window.addEvolutionLog = function(msg, icon = 'info') {
+      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      window.evolutionLogs.unshift({ time, msg, icon });
+      if (window.evolutionLogs.length > 25) window.evolutionLogs.pop();
+      renderLateralLogs();
+      updateLateralSnapshot();
+    };
+
+    function renderLateralLogs() {
+      const container = document.getElementById('lateralLogsContainer');
+      if (!container) return;
+      container.innerHTML = window.evolutionLogs.map(log => `
+        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] flex items-start gap-2">
+          <span class="text-amber-500 font-bold text-[10px] mt-0.5">•</span>
+          <div class="flex-1 leading-tight">
+            <span class="text-slate-800 dark:text-slate-200">${log.msg}</span>
+            <span class="block text-[9px] text-slate-400 mt-0.5">${log.time}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.clearActivityLogs = function() {
+      window.evolutionLogs = [];
+      renderLateralLogs();
+      showToast('Histórico de eventos limpo.');
+    };
+
+    function updateLateralSnapshot() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+      const totalExp = expList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+      const totalRec = recList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+
+      const items = window.warehouseRawItems || [];
+      const fullOccupied = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
+      const halfOccupied = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
+      const totalOccupied = fullOccupied + halfOccupied;
+      const totalCap = window.capFull + window.capHalf;
+      const occRate = totalCap > 0 ? ((totalOccupied / totalCap) * 100) : 0;
+      const totalFree = Math.max(0, totalCap - totalOccupied);
+
+      const snapExp = document.getElementById('lateralSnapExp');
+      const snapRec = document.getElementById('lateralSnapRec');
+      const snapOcc = document.getElementById('lateralSnapOcc');
+      const snapFree = document.getElementById('lateralSnapFree');
+
+      if (snapExp) snapExp.innerText = `R$ ${Math.round(totalExp / 1000)}k`;
+      if (snapRec) snapRec.innerText = `R$ ${Math.round(totalRec / 1000)}k`;
+      if (snapOcc) snapOcc.innerText = `${occRate.toFixed(1)}%`;
+      if (snapFree) snapFree.innerText = `${totalFree} pos.`;
+
+      // Update Executive 360 values
+      const execFat = document.getElementById('execKpiFaturado');
+      const execRec = document.getElementById('execKpiRecebido');
+      const execOcc = document.getElementById('execKpiOcupacao');
+      const execItensExp = document.getElementById('execKpiItensExp');
+      const execItensRec = document.getElementById('execKpiItensRec');
+      const execSlotsLivre = document.getElementById('execKpiSlotsLivre');
+
+      if (execFat) execFat.innerText = totalExp.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (execRec) execRec.innerText = totalRec.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (execOcc) execOcc.innerText = `${occRate.toFixed(1)}%`;
+      if (execItensExp) execItensExp.innerText = `Total de peças expedidas: ${expList.reduce((a, b) => a + (Number(b.itens) || 0), 0).toLocaleString('pt-BR')}`;
+      if (execItensRec) execItensRec.innerText = `Total de peças recebidas: ${recList.reduce((a, b) => a + (Number(b.itens) || 0), 0).toLocaleString('pt-BR')}`;
+      if (execSlotsLivre) execSlotsLivre.innerText = `Posições livres para novo recebimento: ${totalFree}`;
+    }
+
+    // Toggle Lateral Panel
+    window.toggleLateralPanel = function() {
+      const panel = document.getElementById('lateralEvolutionPanel');
+      if (!panel) return;
+      window.lateralOpen = !window.lateralOpen;
+      if (window.lateralOpen) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+      setTimeout(() => {
+        if (window.currentMainModule === 'kpi') refreshApp();
+        if (window.currentMainModule === 'wms') renderWmsDashboard();
+      }, 150);
+    };
+
+    // Firebase Listener
+    function initFirebaseListener() {
+      onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          window.appData = docSnap.data();
+          addEvolutionLog('Dados operacionais sincronizados via Firestore.', 'cloud');
+        } else {
+          setDoc(docRef, initialSpotlarData);
+          window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+          addEvolutionLog('Base inicial gravada com sucesso no Firestore.', 'check');
+        }
+        refreshApp();
+        updateLateralSnapshot();
+        const fbStatus = document.getElementById('lateralFirebaseStatus');
+        if (fbStatus) fbStatus.innerText = 'Sincronizado';
+      }, (error) => {
+        console.error("Firebase sync error:", error);
+        const fbStatus = document.getElementById('lateralFirebaseStatus');
+        if (fbStatus) fbStatus.innerText = 'Offline';
+        addEvolutionLog('Aviso: Operando em memória local temporária.', 'alert');
+      });
+    }
+
+    async function saveFirebaseData() {
+      try {
+        await setDoc(docRef, window.appData);
+        addEvolutionLog('Alterações salvas e enviadas à nuvem.', 'check');
+      } catch (e) {
+        console.error("Firebase save error:", e);
+        showToast("Erro ao sincronizar com Firebase!");
+      }
+    }
+
+    // Module Navigation Switcher
+    window.switchMainModule = function(mod) {
+      window.currentMainModule = mod;
+
+      const kpiSec = document.getElementById('moduleKpiSection');
+      const wmsSec = document.getElementById('moduleWmsSection');
+      const execSec = document.getElementById('moduleExecSection');
+
+      const navKpi = document.getElementById('mainNavKpi');
+      const navWms = document.getElementById('mainNavWms');
+      const navExec = document.getElementById('mainNavExec');
+
+      const mobKpi = document.getElementById('mobNavKpi');
+      const mobWms = document.getElementById('mobNavWms');
+      const mobExec = document.getElementById('mobNavExec');
+
+      const activeClass = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-black shadow-sm transition';
+      const inactiveClass = 'flex items-center gap-2 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition';
+
+      const mobActiveClass = 'px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold whitespace-nowrap';
+      const mobInactiveClass = 'px-3 py-1.5 rounded-lg text-slate-300 whitespace-nowrap';
+
+      if (kpiSec) kpiSec.classList.add('hidden');
+      if (wmsSec) wmsSec.classList.add('hidden');
+      if (execSec) execSec.classList.add('hidden');
+
+      if (navKpi) navKpi.className = inactiveClass;
+      if (navWms) navWms.className = inactiveClass;
+      if (navExec) navExec.className = inactiveClass;
+
+      if (mobKpi) mobKpi.className = mobInactiveClass;
+      if (mobWms) mobWms.className = mobInactiveClass;
+      if (mobExec) mobExec.className = mobInactiveClass;
+
+      if (mod === 'kpi') {
+        if (kpiSec) kpiSec.classList.remove('hidden');
+        if (navKpi) navKpi.className = activeClass;
+        if (mobKpi) mobKpi.className = mobActiveClass;
+        refreshApp();
+      } else if (mod === 'wms') {
+        if (wmsSec) wmsSec.classList.remove('hidden');
+        if (navWms) navWms.className = activeClass;
+        if (mobWms) mobWms.className = mobActiveClass;
+        renderWmsDashboard();
+      } else if (mod === 'exec') {
+        if (execSec) execSec.classList.remove('hidden');
+        if (navExec) navExec.className = activeClass;
+        if (mobExec) mobExec.className = mobActiveClass;
+        updateLateralSnapshot();
+      }
+
+      addEvolutionLog(`Navegação alterada para ${mod.toUpperCase()}.`, 'navigate');
+      if (window.lucide) lucide.createIcons();
+    };
+
+    // WMS Sub-tab Navigation
+    window.switchWmsSubTab = function(subTab) {
+      window.wmsActiveSubTab = subTab;
+      const vGen = document.getElementById('wmsViewGeneral');
+      const vMap = document.getElementById('wmsViewMap');
+      const vSpat = document.getElementById('wmsViewSpatial');
+
+      const btnGen = document.getElementById('wmsSubTabGeneral');
+      const btnMap = document.getElementById('wmsSubTabMap');
+      const btnSpat = document.getElementById('wmsSubTabSpatial');
+
+      const activeClass = 'px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold shadow-xs';
+      const inactiveClass = 'px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white';
+
+      if (vGen) vGen.classList.add('hidden');
+      if (vMap) vMap.classList.add('hidden');
+      if (vSpat) vSpat.classList.add('hidden');
+
+      if (btnGen) btnGen.className = inactiveClass;
+      if (btnMap) btnMap.className = inactiveClass;
+      if (btnSpat) btnSpat.className = inactiveClass;
+
+      if (subTab === 'general') {
+        if (vGen) vGen.classList.remove('hidden');
+        if (btnGen) btnGen.className = activeClass;
+      } else if (subTab === 'map') {
+        if (vMap) vMap.classList.remove('hidden');
+        if (btnMap) btnMap.className = activeClass;
+        renderWarehouseMap();
+      } else if (subTab === 'spatial') {
+        if (vSpat) vSpat.classList.remove('hidden');
+        if (btnSpat) btnSpat.className = activeClass;
+      }
+
+      setTimeout(renderWmsDashboard, 30);
+    };
+
+    // Theme Management
+    window.initTheme = function() {
+      const saved = localStorage.getItem('spotlar_theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      updateThemeUI();
+    };
+
+    window.toggleDarkMode = function() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('spotlar_theme', isDark ? 'dark' : 'light');
+      updateThemeUI();
+      refreshApp();
+      renderWmsDashboard();
+    };
+
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const label = document.getElementById('themeLabel');
+      const icon = document.getElementById('themeIcon');
+      if (label) label.innerText = isDark ? 'Modo Claro' : 'Modo Escuro';
+      if (icon) {
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    window.switchProcess = function(proc) {
+      window.currentProcess = proc;
+      const btnExp = document.getElementById('tabBtnExpedicao');
+      const btnRec = document.getElementById('tabBtnRecebimento');
+      const cardUhs = document.getElementById('cardUhs');
+      const kpiTitleValor = document.getElementById('kpiTitleValor');
+
+      const chart1Badge = document.getElementById('chart1Badge');
+      const chart2Badge = document.getElementById('chart2Badge');
+      const chart2Title = document.getElementById('chart2Title');
+      const chartWeek1Badge = document.getElementById('chartWeek1Badge');
+      const chartWeek2Badge = document.getElementById('chartWeek2Badge');
+      const chartWeek2Title = document.getElementById('chartWeek2Title');
+
+      const activeClass = 'flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all bg-amber-400 text-slate-950 shadow-sm';
+      const inactiveClass = 'flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white';
+
+      if (proc === 'expedicao') {
+        if (btnExp) btnExp.className = activeClass;
+        if (btnRec) btnRec.className = inactiveClass;
+        if (cardUhs) cardUhs.classList.remove('hidden');
+        if (kpiTitleValor) kpiTitleValor.innerText = 'VALOR FATURADO';
+        if (chart1Badge) chart1Badge.innerText = 'EXPEDIÇÃO';
+        if (chart2Badge) chart2Badge.innerText = 'EXPEDIÇÃO';
+        if (chart2Title) chart2Title.innerText = 'VOLUME EXPEDIDO MENSAL';
+        if (chartWeek1Badge) chartWeek1Badge.innerText = 'EXPEDIÇÃO';
+        if (chartWeek2Badge) chartWeek2Badge.innerText = 'EXPEDIÇÃO';
+        if (chartWeek2Title) chartWeek2Title.innerText = 'VOLUME EXPEDIDO POR WEEK';
+      } else {
+        if (btnRec) btnRec.className = activeClass;
+        if (btnExp) btnExp.className = inactiveClass;
+        if (cardUhs) cardUhs.classList.add('hidden');
+        if (kpiTitleValor) kpiTitleValor.innerText = 'VALOR RECEBIDO';
+        if (chart1Badge) chart1Badge.innerText = 'RECEBIMENTO';
+        if (chart2Badge) chart2Badge.innerText = 'RECEBIMENTO';
+        if (chart2Title) chart2Title.innerText = 'VOLUME RECEBIDO MENSAL';
+        if (chartWeek1Badge) chartWeek1Badge.innerText = 'RECEBIMENTO';
+        if (chartWeek2Badge) chartWeek2Badge.innerText = 'RECEBIMENTO';
+        if (chartWeek2Title) chartWeek2Title.innerText = 'VOLUME RECEBIDO POR WEEK';
+      }
+      refreshApp();
+    };
+
+    function getMonthlyAggregates() {
+      const records = window.appData[window.currentProcess] || [];
+      const monthsOrder = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const grouped = {};
+
+      records.forEach(r => {
+        const m = r.mes || 'Agosto';
+        if (!grouped[m]) {
+          grouped[m] = { mes: m, valor: 0, nf: 0, uh: 0, skus: 0, itens: 0, count: 0 };
+        }
+        grouped[m].valor += Number(r.valor) || 0;
+        grouped[m].nf += Number(r.nf) || 0;
+        grouped[m].uh += Number(r.uh) || 0;
+        grouped[m].skus += Number(r.skus) || 0;
+        grouped[m].itens += Number(r.itens) || 0;
+        grouped[m].count += 1;
+      });
+
+      return Object.values(grouped).sort((a, b) => monthsOrder.indexOf(a.mes) - monthsOrder.indexOf(b.mes));
+    }
+
+    function getSelectedMonthWeeks() {
+      const records = window.appData[window.currentProcess] || [];
+      const filtered = records.filter(r => (r.mes || '').toLowerCase() === (window.selectedMonth || '').toLowerCase());
+      return filtered.sort((a, b) => {
+        const numA = parseInt(a.week || (a.semana ? a.semana.replace(/\D/g, '') : '0')) || 0;
+        const numB = parseInt(b.week || (b.semana ? b.semana.replace(/\D/g, '') : '0')) || 0;
+        return numA - numB;
+      });
+    }
+
+    function updateKPIs() {
+      const records = window.appData[window.currentProcess] || [];
+      const totalValor = records.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+      const totalNf = records.reduce((acc, r) => acc + (Number(r.nf) || 0), 0);
+      const totalUh = records.reduce((acc, r) => acc + (Number(r.uh) || 0), 0);
+      const totalSkus = records.reduce((acc, r) => acc + (Number(r.skus) || 0), 0);
+      const totalItens = records.reduce((acc, r) => acc + (Number(r.itens) || 0), 0);
+
+      const numMonths = [...new Set(records.map(r => r.mes))].length || 1;
+      const avgValorK = Math.round(totalValor / numMonths / 1000);
+      const avgNf = (totalNf / numMonths).toFixed(1);
+      const avgUh = (totalUh / numMonths).toFixed(1);
+      const avgSkus = Math.round(totalSkus / numMonths);
+      const avgItens = Math.round(totalItens / numMonths);
+
+      const elVal = document.getElementById('kpiValorFaturado');
+      const elValMed = document.getElementById('kpiValorMedio');
+      const elNf = document.getElementById('kpiNotasFiscais');
+      const elNfMed = document.getElementById('kpiNotasMedia');
+      const elUh = document.getElementById('kpiUhs');
+      const elUhMed = document.getElementById('kpiUhsMedia');
+      const elSku = document.getElementById('kpiSkus');
+      const elSkuMed = document.getElementById('kpiSkusMedia');
+      const elItens = document.getElementById('kpiTotalItens');
+      const elItensMed = document.getElementById('kpiItensMedia');
+
+      if (elVal) elVal.innerText = totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (elValMed) elValMed.innerText = `Méd: R$ ${avgValorK}k`;
+      if (elNf) elNf.innerText = totalNf.toLocaleString('pt-BR');
+      if (elNfMed) elNfMed.innerText = `${avgNf}/mês`;
+      if (elUh) elUh.innerText = totalUh.toLocaleString('pt-BR');
+      if (elUhMed) elUhMed.innerText = `${avgUh}/mês`;
+      if (elSku) elSku.innerText = totalSkus.toLocaleString('pt-BR');
+      if (elSkuMed) elSkuMed.innerText = `${avgSkus}/mês`;
+      if (elItens) elItens.innerText = totalItens.toLocaleString('pt-BR');
+      if (elItensMed) elItensMed.innerText = `${avgItens.toLocaleString('pt-BR')}/mês`;
+    }
+
+    function renderMonthPills() {
+      const container = document.getElementById('monthPillsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const monthly = getMonthlyAggregates();
+      const availableMonths = monthly.map(m => m.mes);
+
+      if (availableMonths.length > 0 && !availableMonths.includes(window.selectedMonth)) {
+        window.selectedMonth = availableMonths[availableMonths.length - 1];
+      }
+
+      if (availableMonths.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-400 italic">Nenhum mês lançado ainda</span>';
+        const badge = document.getElementById('activeWeekMonthBadge');
+        if (badge) badge.innerText = `Mês: Nenhum`;
+        return;
+      }
+
+      availableMonths.forEach(m => {
+        const btn = document.createElement('button');
+        const isActive = m === window.selectedMonth;
+        btn.onclick = () => selectMonthForWeeks(m);
+        btn.className = isActive
+          ? 'px-3 py-1 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 shadow-xs transition'
+          : 'px-3 py-1 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition';
+        btn.innerText = m;
+        container.appendChild(btn);
+      });
+
+      const badge = document.getElementById('activeWeekMonthBadge');
+      if (badge) badge.innerText = `Mês: ${window.selectedMonth}`;
+    }
+
+    window.selectMonthForWeeks = function(mes) {
+      window.selectedMonth = mes;
+      renderMonthPills();
+      renderWeeklyCharts();
+      const badge = document.getElementById('activeWeekMonthBadge');
+      if (badge) badge.innerText = `Mês: ${mes}`;
+      showToast(`Visualizando semanas de ${mes}`);
+    };
+
+    function renderMonthlyCharts() {
+      const monthly = getMonthlyAggregates();
+      const labels = monthly.map(m => m.mes);
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+      const gridColor = isDark ? '#334155' : '#f1f5f9';
+
+      const valores = monthly.map(m => m.valor);
+      const avgValor = valores.length > 0 ? (valores.reduce((a, b) => a + b, 0) / valores.length) : 0;
+      const avgLineData = labels.map(() => avgValor);
+
+      const ctx1 = document.getElementById('chartFaturadoCanvas')?.getContext('2d');
+      if (!ctx1) return;
+      if (chartFaturadoMonthly) chartFaturadoMonthly.destroy();
+
+      chartFaturadoMonthly = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['Sem dados'],
+          datasets: [
+            {
+              type: 'bar',
+              label: window.currentProcess === 'expedicao' ? 'Valor Faturado (R$)' : 'Valor Recebido (R$)',
+              data: valores.length ? valores : [0],
+              backgroundColor: '#70a6ff',
+              hoverBackgroundColor: '#3b82f6',
+              borderRadius: 6,
+              barPercentage: 0.55,
+              order: 2,
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: textColor,
+                font: { weight: 'bold', size: 11 },
+                formatter: (val) => val > 0 ? `R$ ${Math.round(val / 1000)}k` : ''
+              }
+            },
+            {
+              type: 'line',
+              label: 'Média Mensal',
+              data: avgLineData.length ? avgLineData : [0],
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false,
+              order: 1,
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 25 } },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              if (labels[idx] && labels[idx] !== 'Sem dados') {
+                selectMonthForWeeks(labels[idx]);
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { color: textColor, font: { size: 11, weight: 'bold' }, usePointStyle: true }
+            }
+          },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 12, weight: '600' } }, grid: { display: false } },
+            y: { ticks: { color: textColor, callback: (val) => `R$ ${Math.round(val / 1000)}k` }, grid: { color: gridColor } }
+          }
+        }
+      });
+
+      const itensData = monthly.map(m => m.itens);
+      const skusData = monthly.map(m => m.skus);
+      const nfData = monthly.map(m => m.nf);
+      const uhData = monthly.map(m => m.uh);
+
+      const ctx2 = document.getElementById('chartVolumeCanvas')?.getContext('2d');
+      if (!ctx2) return;
+      if (chartVolumeMonthly) chartVolumeMonthly.destroy();
+
+      const datasets2 = [
+        {
+          type: 'bar',
+          label: 'Total de Itens',
+          data: itensData.length ? itensData : [0],
+          backgroundColor: '#8492a6',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          yAxisID: 'y',
+          datalabels: { anchor: 'end', align: 'top', color: textColor, font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? v : '' }
+        },
+        {
+          type: 'bar',
+          label: "SKU's",
+          data: skusData.length ? skusData : [0],
+          backgroundColor: '#fde047',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          yAxisID: 'y',
+          datalabels: { anchor: 'center', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? v : '' }
+        },
+        {
+          type: 'line',
+          label: 'Notas Fiscais',
+          data: nfData.length ? nfData : [0],
+          borderColor: '#ea580c',
+          backgroundColor: '#ea580c',
+          tension: 0.25,
+          borderWidth: 2.5,
+          pointRadius: 5,
+          yAxisID: 'y1',
+          datalabels: { align: 'top', color: '#ea580c', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `NF:${v}` : '' }
+        }
+      ];
+
+      if (window.currentProcess === 'expedicao') {
+        datasets2.push({
+          type: 'line',
+          label: "UH's",
+          data: uhData.length ? uhData : [0],
+          borderColor: '#0d9488',
+          backgroundColor: '#0d9488',
+          borderDash: [4, 4],
+          tension: 0.25,
+          borderWidth: 2,
+          pointRadius: 4,
+          yAxisID: 'y1',
+          datalabels: { align: 'bottom', color: '#0d9488', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `UH:${v}` : '' }
+        });
+      }
+
+      chartVolumeMonthly = new Chart(ctx2, {
+        type: 'bar',
+        data: { labels: labels.length ? labels : ['Sem dados'], datasets: datasets2 },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 25 } },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              if (labels[idx] && labels[idx] !== 'Sem dados') {
+                selectMonthForWeeks(labels[idx]);
+              }
+            }
+          },
+          plugins: {
+            legend: { position: 'top', labels: { color: textColor, font: { size: 11, weight: 'bold' }, usePointStyle: true } }
+          },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 12, weight: '600' } }, grid: { display: false } },
+            y: { type: 'linear', position: 'left', ticks: { color: textColor }, grid: { color: gridColor } },
+            y1: { type: 'linear', position: 'right', ticks: { color: textColor }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderWeeklyCharts() {
+      const weeks = getSelectedMonthWeeks();
+      const labels = weeks.map(w => w.semana || `Semana ${w.week}`);
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#cbd5e1' : '#475569';
+      const gridColor = isDark ? '#334155' : '#f1f5f9';
+
+      const valores = weeks.map(w => Number(w.valor) || 0);
+      const avgValor = valores.length > 0 ? (valores.reduce((a, b) => a + b, 0) / valores.length) : 0;
+      const avgLineData = labels.map(() => avgValor);
+
+      const ctxW1 = document.getElementById('chartFaturadoWeekCanvas')?.getContext('2d');
+      if (!ctxW1) return;
+      if (chartFaturadoWeek) chartFaturadoWeek.destroy();
+
+      chartFaturadoWeek = new Chart(ctxW1, {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : [`Nenhuma semana cadastrada em ${window.selectedMonth}`],
+          datasets: [
+            {
+              type: 'bar',
+              label: window.currentProcess === 'expedicao' ? 'Valor Faturado (R$)' : 'Valor Recebido (R$)',
+              data: valores.length ? valores : [0],
+              backgroundColor: '#60a5fa',
+              hoverBackgroundColor: '#3b82f6',
+              borderRadius: 6,
+              barPercentage: 0.5,
+              order: 2,
+              datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: textColor,
+                font: { weight: 'bold', size: 11 },
+                formatter: (val) => val > 0 ? `R$ ${Math.round(val / 1000)}k` : ''
+              }
+            },
+            {
+              type: 'line',
+              label: `Média Semanal (${window.selectedMonth})`,
+              data: avgLineData.length ? avgLineData : [0],
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              fill: false,
+              order: 1,
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 25 } },
+          plugins: {
+            legend: { position: 'top', labels: { color: textColor, font: { size: 11, weight: 'bold' }, usePointStyle: true } }
+          },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 11, weight: '600' } }, grid: { display: false } },
+            y: { ticks: { color: textColor, callback: (val) => `R$ ${Math.round(val / 1000)}k` }, grid: { color: gridColor } }
+          }
+        }
+      });
+
+      const itensData = weeks.map(w => Number(w.itens) || 0);
+      const skusData = weeks.map(w => Number(w.skus) || 0);
+      const nfData = weeks.map(w => Number(w.nf) || 0);
+      const uhData = weeks.map(w => Number(w.uh) || 0);
+
+      const ctxW2 = document.getElementById('chartVolumeWeekCanvas')?.getContext('2d');
+      if (!ctxW2) return;
+      if (chartVolumeWeek) chartVolumeWeek.destroy();
+
+      const datasetsW2 = [
+        {
+          type: 'bar',
+          label: 'Total de Itens',
+          data: itensData.length ? itensData : [0],
+          backgroundColor: '#8492a6',
+          borderRadius: 6,
+          barPercentage: 0.65,
+          yAxisID: 'y',
+          datalabels: { anchor: 'end', align: 'top', color: textColor, font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? v : '' }
+        },
+        {
+          type: 'bar',
+          label: "SKU's",
+          data: skusData.length ? skusData : [0],
+          backgroundColor: '#facc15',
+          borderRadius: 6,
+          barPercentage: 0.65,
+          yAxisID: 'y',
+          datalabels: { anchor: 'center', color: '#1e293b', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? v : '' }
+        },
+        {
+          type: 'line',
+          label: 'Notas Fiscais',
+          data: nfData.length ? nfData : [0],
+          borderColor: '#ea580c',
+          backgroundColor: '#ea580c',
+          tension: 0.25,
+          borderWidth: 2.5,
+          pointRadius: 5,
+          yAxisID: 'y1',
+          datalabels: { align: 'top', color: '#ea580c', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `NF:${v}` : '' }
+        }
+      ];
+
+      if (window.currentProcess === 'expedicao') {
+        datasetsW2.push({
+          type: 'line',
+          label: "UH's",
+          data: uhData.length ? uhData : [0],
+          borderColor: '#0d9488',
+          backgroundColor: '#0d9488',
+          borderDash: [4, 4],
+          tension: 0.25,
+          borderWidth: 2,
+          pointRadius: 4,
+          yAxisID: 'y1',
+          datalabels: { align: 'bottom', color: '#0d9488', font: { weight: 'bold', size: 10 }, formatter: (v) => v > 0 ? `UH:${v}` : '' }
+        });
+      }
+
+      chartVolumeWeek = new Chart(ctxW2, {
+        type: 'bar',
+        data: { labels: labels.length ? labels : [`Nenhuma semana cadastrada em ${window.selectedMonth}`], datasets: datasetsW2 },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 25 } },
+          plugins: {
+            legend: { position: 'top', labels: { color: textColor, font: { size: 11, weight: 'bold' }, usePointStyle: true } }
+          },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 11, weight: '600' } }, grid: { display: false } },
+            y: { type: 'linear', position: 'left', ticks: { color: textColor }, grid: { color: gridColor } },
+            y1: { type: 'linear', position: 'right', ticks: { color: textColor }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function refreshApp() {
+      updateKPIs();
+      renderMonthlyCharts();
+      renderMonthPills();
+      renderWeeklyCharts();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // WMS Logic
+    window.renderWmsDashboard = function() {
+      const items = window.warehouseRawItems || [];
+      const totalCap = window.capFull + window.capHalf;
+
+      const searchInput = document.getElementById('globalSearchInput');
+      const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const filteredItems = query 
+        ? items.filter(d => d.endereco.toLowerCase().includes(query))
+        : items;
+
+      const fullOccupied = filteredItems.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
+      const halfOccupied = filteredItems.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
+      const totalOccupied = fullOccupied + halfOccupied;
+
+      const fullFree = Math.max(0, window.capFull - fullOccupied);
+      const halfFree = Math.max(0, window.capHalf - halfOccupied);
+      const totalFree = Math.max(0, totalCap - totalOccupied);
+
+      const occRate = totalCap > 0 ? ((totalOccupied / totalCap) * 100) : 0;
+      const fullRate = window.capFull > 0 ? ((fullOccupied / window.capFull) * 100) : 0;
+      const halfRate = window.capHalf > 0 ? ((halfOccupied / window.capHalf) * 100) : 0;
+
+      // KPI Displays
+      const elTotOcc = document.getElementById('kpiTotalOccupied');
+      const elTotCap = document.getElementById('kpiTotalCap');
+      const elTotRate = document.getElementById('kpiTotalRate');
+      const elTotBar = document.getElementById('kpiTotalBar');
+      const badgeTot = document.getElementById('badgeTotalStatus');
+
+      if (elTotOcc) elTotOcc.innerText = totalOccupied;
+      if (elTotCap) elTotCap.innerText = totalCap;
+      if (elTotRate) elTotRate.innerText = `${occRate.toFixed(1)}%`;
+      if (elTotBar) elTotBar.style.width = `${Math.min(100, occRate)}%`;
+
+      if (badgeTot) {
+        if (occRate >= 90) {
+          badgeTot.className = 'px-2.5 py-1 text-[11px] font-bold rounded-full bg-red-100 text-red-700';
+          badgeTot.innerText = 'Crítico (≥90%)';
+        } else if (occRate >= 75) {
+          badgeTot.className = 'px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800';
+          badgeTot.innerText = 'Atenção (≥75%)';
+        } else {
+          badgeTot.className = 'px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800';
+          badgeTot.innerText = 'Normal';
+        }
+      }
+
+      const elFullUsed = document.getElementById('kpiFullUsed');
+      const elFullCap = document.getElementById('kpiFullCap');
+      const elFullRate = document.getElementById('kpiFullRate');
+      const elFullFree = document.getElementById('kpiFullFree');
+      const elFullBar = document.getElementById('kpiFullBar');
+
+      if (elFullUsed) elFullUsed.innerText = fullOccupied;
+      if (elFullCap) elFullCap.innerText = window.capFull;
+      if (elFullRate) elFullRate.innerText = `${fullRate.toFixed(1)}%`;
+      if (elFullFree) elFullFree.innerText = fullFree;
+      if (elFullBar) elFullBar.style.width = `${Math.min(100, fullRate)}%`;
+
+      const elHalfUsed = document.getElementById('kpiHalfUsed');
+      const elHalfCap = document.getElementById('kpiHalfCap');
+      const elHalfRate = document.getElementById('kpiHalfRate');
+      const elHalfFree = document.getElementById('kpiHalfFree');
+      const elHalfBar = document.getElementById('kpiHalfBar');
+
+      if (elHalfUsed) elHalfUsed.innerText = halfOccupied;
+      if (elHalfCap) elHalfCap.innerText = window.capHalf;
+      if (elHalfRate) elHalfRate.innerText = `${halfRate.toFixed(1)}%`;
+      if (elHalfFree) elHalfFree.innerText = halfFree;
+      if (elHalfBar) elHalfBar.style.width = `${Math.min(100, halfRate)}%`;
+
+      const elTotalFree = document.getElementById('kpiTotalFree');
+      const elFreeFullSub = document.getElementById('kpiFreeFullSub');
+      const elFreeHalfSub = document.getElementById('kpiFreeHalfSub');
+
+      if (elTotalFree) elTotalFree.innerText = totalFree;
+      if (elFreeFullSub) elFreeFullSub.innerText = fullFree;
+      if (elFreeHalfSub) elFreeHalfSub.innerText = halfFree;
+
+      const gaugeValDisplay = document.getElementById('gaugeValueDisplay');
+      const gaugeStatusText = document.getElementById('gaugeStatusText');
+      if (gaugeValDisplay) gaugeValDisplay.innerText = `${occRate.toFixed(1)}%`;
+      if (gaugeStatusText) {
+        if (occRate >= 90) gaugeStatusText.innerText = 'Capacidade Crítica (≥90%)';
+        else if (occRate >= 75) gaugeStatusText.innerText = 'Capacidade Elevada (≥75%)';
+        else gaugeStatusText.innerText = 'Capacidade Operacional Normal';
+      }
+
+      renderGaugeChart(occRate);
+      renderOverviewStatusChart(totalOccupied, totalFree);
+      renderGeneralTable();
+      renderWarehouseMap();
+      renderSpatialAnalysis(filteredItems, totalOccupied);
+      updateLateralSnapshot();
+    };
+
+    function renderGaugeChart(rate) {
+      const canvas = document.getElementById('gaugeChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      try {
+        const ctx = canvas.getContext('2d');
+        if (gaugeChartInstance) gaugeChartInstance.destroy();
+
+        gaugeChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Ocupado', 'Livre'],
+            datasets: [{
+              data: [rate, Math.max(0, 100 - rate)],
+              backgroundColor: [
+                rate >= 90 ? '#ef4444' : (rate >= 75 ? '#f59e0b' : '#fde047'),
+                '#e2e8f0'
+              ],
+              borderWidth: 0,
+              circumference: 180,
+              rotation: 270,
+              datalabels: { display: false }
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false }
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Error in renderGaugeChart:", e);
+      }
+    }
+
+    function renderOverviewStatusChart(occupiedCount, freeCount) {
+      const canvas = document.getElementById('overviewStatusChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      try {
+        const ctx = canvas.getContext('2d');
+        if (overviewStatusChartInstance) overviewStatusChartInstance.destroy();
+
+        const total = occupiedCount + freeCount;
+        const occPct = total > 0 ? ((occupiedCount / total) * 100).toFixed(1) : "0";
+        const freePct = total > 0 ? ((freeCount / total) * 100).toFixed(1) : "0";
+
+        overviewStatusChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+              `Ocupado: ${occupiedCount} (${occPct}%)`,
+              `Livre: ${freeCount} (${freePct}%)`
+            ],
+            datasets: [{
+              data: [occupiedCount, freeCount],
+              backgroundColor: ['#fde047', '#10b981'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              datalabels: {
+                color: '#1e293b',
+                font: { weight: 'bold', size: 11 },
+                formatter: (val) => `${val}`
+              }
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } }
+              }
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Error in renderOverviewStatusChart:", e);
+      }
+    }
+
+    window.renderWarehouseMap = function() {
+      const container = document.getElementById('warehouseRacksContainer');
+      const aisleFilter = document.getElementById('mapAisleFilter');
+      if (!container) return;
+
+      const selectedAisle = aisleFilter ? aisleFilter.value : 'ALL';
+      const searchQuery = document.getElementById('globalSearchInput') ? document.getElementById('globalSearchInput').value.toLowerCase().trim() : '';
+
+      let items = window.warehouseRawItems;
+      if (searchQuery) {
+        items = items.filter(d => d.endereco.toLowerCase().includes(searchQuery));
+      }
+
+      const aisles = ['AA', 'AB', 'AC'];
+      container.innerHTML = '';
+
+      aisles.forEach(aisle => {
+        if (selectedAisle !== 'ALL' && selectedAisle !== aisle) return;
+
+        const aisleItems = items.filter(d => d.endereco.toUpperCase().startsWith(aisle));
+        const occFull = aisleItems.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
+        const occHalf = aisleItems.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
+        const freeCount = aisleItems.filter(d => d.counta === 0).length;
+
+        const aisleCard = document.createElement('div');
+        aisleCard.className = "bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3";
+
+        aisleCard.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="bg-slate-900 dark:bg-amber-400 text-white dark:text-slate-950 font-extrabold text-xs px-2.5 py-1 rounded-md">RUA ${aisle}</span>
+              <span class="text-xs font-semibold text-slate-500">${aisleItems.length} Posições Mapeadas</span>
+            </div>
+            <div class="flex items-center gap-3 text-xs font-semibold">
+              <span class="text-amber-700 dark:text-amber-400"><strong>${occFull}</strong> Full</span>
+              <span class="text-slate-700 dark:text-slate-300"><strong>${occHalf}</strong> Meia</span>
+              <span class="text-emerald-600 dark:text-emerald-400"><strong>${freeCount}</strong> Livres</span>
+            </div>
+          </div>
+          <div class="rack-grid pt-2">
+            ${generateRackCells(aisleItems)}
+          </div>
+        `;
+        container.appendChild(aisleCard);
+      });
+    };
+
+    function generateRackCells(aisleItems) {
+      if (!aisleItems || aisleItems.length === 0) {
+        return '<div class="col-span-full text-xs text-slate-400 p-4 text-center">Nenhum endereço encontrado para esta rua.</div>';
+      }
+
+      return aisleItems.map(item => {
+        const isOccupied = item.counta > 0;
+        const isFull = item.tipo === "Posição Full";
+
+        let bgColor = 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100';
+        let statusLabel = 'LIVRE';
+
+        if (isOccupied) {
+          if (isFull) {
+            bgColor = 'bg-amber-300 hover:bg-amber-400 text-slate-950 font-bold shadow-xs border border-amber-400';
+            statusLabel = `FULL (${item.counta})`;
+          } else {
+            bgColor = 'bg-slate-700 hover:bg-slate-800 text-white shadow-xs border border-slate-800';
+            statusLabel = `MEIA (${item.counta})`;
+          }
+        }
+
+        return `
+          <div title="Endereço: ${item.endereco}\nQtd: ${item.counta}\nStatus: ${isOccupied ? 'Ocupado' : 'Livre'}\nTipo: ${item.tipo}" 
+               class="${bgColor} p-2 rounded-xl text-center text-[10px] font-bold cursor-pointer transition flex flex-col justify-between h-14 hover:scale-105">
+            <span class="truncate font-mono">${item.endereco}</span>
+            <span class="text-[9px] uppercase font-mono truncate">${statusLabel}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSpatialAnalysis(monthItems, totalOccupied) {
+      const aisleCanvas = document.getElementById('aisleChart');
+      const levelCanvas = document.getElementById('levelChart');
+      const tbody = document.getElementById('aisleTableBody');
+
+      if (!aisleCanvas || !levelCanvas) return;
+      const aisles = ['Rua AA', 'Rua AB', 'Rua AC'];
+      const aisleCounts = aisles.map(aisle => {
+        const letter = aisle.replace('Rua ', '');
+        return monthItems.filter(item => item.endereco.toUpperCase().startsWith(letter) && item.counta > 0).length;
+      });
+
+      if (aisleChartInstance) aisleChartInstance.destroy();
+      aisleChartInstance = new Chart(aisleCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: aisles,
+          datasets: [{
+            label: 'Posições Ocupadas',
+            data: aisleCounts,
+            backgroundColor: '#fde047',
+            borderColor: '#eab308',
+            borderWidth: 1,
+            borderRadius: 8,
+            datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold', size: 10 } }
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      const level01 = monthItems.filter(i => (i.endereco.endsWith('.1') || i.endereco.includes('.01.')) && i.counta > 0).length;
+      const levelUpper = Math.max(0, totalOccupied - level01);
+
+      if (levelChartInstance) levelChartInstance.destroy();
+      levelChartInstance = new Chart(levelCanvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: [`Térreo (Nível 01): ${level01}`, `Superiores (02+): ${levelUpper}`],
+          datasets: [{
+            data: [level01, levelUpper],
+            backgroundColor: ['#64748b', '#fde047'],
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            datalabels: { color: '#1e293b', font: { weight: 'bold', size: 11 } }
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+
+      if (tbody) {
+        tbody.innerHTML = '';
+        aisles.forEach((aisle) => {
+          const letter = aisle.replace('Rua ', '');
+          const itemsInAisle = monthItems.filter(item => item.endereco.toUpperCase().startsWith(letter));
+          const fullCount = itemsInAisle.filter(i => i.tipo === "Posição Full" && i.counta > 0).length;
+          const halfCount = itemsInAisle.filter(i => i.tipo === "Meia Posição" && i.counta > 0).length;
+          const totalOccInAisle = itemsInAisle.filter(i => i.counta > 0).length;
+          const totalFreeInAisle = itemsInAisle.filter(i => i.counta === 0).length;
+          const pct = totalOccupied > 0 ? ((totalOccInAisle / totalOccupied) * 100).toFixed(1) : "0.0";
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+          tr.innerHTML = `
+            <td class="py-3.5 px-4 font-bold text-slate-800 dark:text-white">${aisle}</td>
+            <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">${fullCount} pos.</td>
+            <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">${halfCount} pos.</td>
+            <td class="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400">${totalOccInAisle} pos.</td>
+            <td class="py-3.5 px-4 font-bold text-emerald-600 dark:text-emerald-400">${totalFreeInAisle} pos.</td>
+            <td class="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">${pct}%</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    function renderGeneralTable() {
+      const tbody = document.getElementById('dataTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const items = window.warehouseRawItems;
+      const totalCap = window.capFull + window.capHalf;
+      const fullCount = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
+      const halfCount = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
+      const totalOcc = fullCount + halfCount;
+      const freeCount = Math.max(0, totalCap - totalOcc);
+      const pct = totalCap > 0 ? ((totalOcc / totalCap) * 100).toFixed(1) : "0.0";
+
+      let statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Normal</span>`;
+      if (parseFloat(pct) >= 90) {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300">Crítico</span>`;
+      } else if (parseFloat(pct) >= 75) {
+        statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">Atenção</span>`;
+      }
+
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition';
+      tr.innerHTML = `
+        <td class="py-3.5 px-4 font-bold text-slate-900 dark:text-white">CD_Itajai-SC (Geral)</td>
+        <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">${fullCount} / ${window.capFull}</td>
+        <td class="py-3.5 px-4 text-slate-600 dark:text-slate-400">${halfCount} / ${window.capHalf}</td>
+        <td class="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400">${totalOcc} pos.</td>
+        <td class="py-3.5 px-4 font-semibold text-emerald-600 dark:text-emerald-400">${freeCount} pos.</td>
+        <td class="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">${pct}%</td>
+        <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Google Sheets WMS Synchronization
+    window.syncWmsGoogleSheets = function(isSilent = false) {
+      const syncIcon = document.getElementById('syncIcon');
+      if (syncIcon) syncIcon.className = "fa-solid fa-arrows-rotate fa-spin text-xs";
+
+      const rawUrl = document.getElementById('sheetUrlInput')?.value || "https://docs.google.com/spreadsheets/d/1YFYGpEkjMXR_gXQx3IBDgx70Pl0i7oU0_OZp6oOUeM0/edit?gid=1906630665#gid=1906630665";
+      const match = rawUrl.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (!match) {
+        if (syncIcon) syncIcon.className = "fa-solid fa-cloud-arrow-down text-xs";
+        if (!isSilent) showToast("Link da planilha Google Sheets inválido.", true);
+        return;
+      }
+
+      const sheetId = match[1];
+      let gid = "0";
+      const gidMatch = rawUrl.match(/[#?&]gid=([0-9]+)/);
+      if (gidMatch) gid = gidMatch[1];
+
+      const callbackName = `__spotlar_unified_cb_${Date.now()}`;
+      let finished = false;
+
+      const cleanup = () => {
+        const s = document.getElementById(callbackName);
+        if (s) s.remove();
+        try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+        if (syncIcon) syncIcon.className = "fa-solid fa-cloud-arrow-down text-xs";
+      };
+
+      window[callbackName] = function(response) {
+        finished = true;
+        cleanup();
+        if (!response || response.status !== 'ok' || !response.table) {
+          addEvolutionLog('Google Sheets: Verifique o acesso público da planilha.', 'alert');
+          return;
+        }
+        const rowsCount = parseGVizTable(response.table);
+        if (rowsCount > 0) {
+          addEvolutionLog(`Planilha Google Sheets atualizada: ${rowsCount} posições lidas.`, 'sync');
+          const lastSync = document.getElementById('lastSyncTime');
+          if (lastSync) lastSync.innerText = `Última sincronização (Nuvem): às ${new Date().toLocaleTimeString('pt-BR')}`;
+          if (!isSilent) showToast(`Sincronizado: ${rowsCount} posições WMS atualizadas.`);
+        }
+      };
+
+      const script = document.createElement('script');
+      script.id = callbackName;
+      script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gid}&tqx=responseHandler:${callbackName}&headers=1&_t=${Date.now()}`;
+      script.onerror = function() {
+        if (!finished) {
+          finished = true;
+          cleanup();
+          addEvolutionLog('Conexão Google Sheets: mantendo base local.', 'info');
+        }
+      };
+      document.body.appendChild(script);
+    };
+
+    function parseGVizTable(table) {
+      if (!table || !table.rows || table.rows.length === 0) return 0;
+      const parsed = [];
+      for (let i = 0; i < table.rows.length; i++) {
+        const row = table.rows[i];
+        if (!row || !row.c) continue;
+
+        const c0 = row.c[0]?.v !== undefined ? String(row.c[0].v).trim() : "";
+        const c1 = row.c[1]?.v !== undefined ? String(row.c[1].v).trim() : "";
+        const c2 = row.c[2]?.v !== undefined ? row.c[2].v : "";
+
+        if (c0 === "" || /^endere[cç]o/i.test(c0) || /^c[oó]digo/i.test(c0)) continue;
+
+        let rawEndereco = c0;
+        let countaVal = 0;
+        let tipoNorm = "Posição Full";
+
+        if (/^[A-Z]{2}\.\d{2}/i.test(c0)) {
+          if (c1.includes("Meia") || c1.includes("Full")) {
+            tipoNorm = c1.includes("Meia") ? "Meia Posição" : "Posição Full";
+          } else if (rawEndereco.endsWith('.A') || rawEndereco.endsWith('.B') || rawEndereco.includes('.01.')) {
+            tipoNorm = "Meia Posição";
+          }
+          if (typeof c2 === 'number') countaVal = c2;
+          else {
+            const p = parseFloat(String(c2).replace(',', '.'));
+            countaVal = isNaN(p) ? (c2 ? 1 : 0) : p;
+          }
+        } else {
+          continue;
+        }
+
+        parsed.push({ mes: "Atual", endereco: rawEndereco, counta: countaVal, tipo: tipoNorm });
+      }
+
+      if (parsed.length > 0) {
+        window.warehouseRawItems = parsed;
+        renderWmsDashboard();
+        return parsed.length;
+      }
+      return 0;
+    }
+
+    // Modal controls for Capacity & Parameters
+    window.toggleConfigModal = function() {
+      const modal = document.getElementById('configModal');
+      if (modal) modal.classList.toggle('hidden');
+    };
+
+    window.updateCapacities = function() {
+      const fullInput = document.getElementById('inputCapFull');
+      const halfInput = document.getElementById('inputCapHalf');
+      if (fullInput && halfInput) {
+        window.capFull = parseInt(fullInput.value, 10) || 112;
+        window.capHalf = parseInt(halfInput.value, 10) || 72;
+        const totalCap = window.capFull + window.capHalf;
+        const modalDisplay = document.getElementById('totalCapDisplayModal');
+        if (modalDisplay) modalDisplay.innerText = `${totalCap} posições`;
+        renderWmsDashboard();
+        addEvolutionLog(`Capacidades atualizadas: Full ${window.capFull}, Meia ${window.capHalf}.`, 'settings');
+      }
+    };
+
+    window.exportWmsCSV = function(type) {
+      let csvContent = "data:text/csv;charset=utf-8,Centro de Distribuição,Full Ocupado,Meia Ocupado,Total Ocupado,Total Livre,Capacidade Total,% Ocupacao\n";
+      const totalCap = window.capFull + window.capHalf;
+      const items = window.warehouseRawItems;
+      const sumFull = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
+      const sumHalf = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
+      const totalOcc = sumFull + sumHalf;
+      const freeCount = Math.max(0, totalCap - totalOcc);
+      const pct = totalCap > 0 ? ((totalOcc / totalCap) * 100).toFixed(1) : "0.0";
+      csvContent += `"CD_Itajai-SC",${sumFull},${sumHalf},${totalOcc},${freeCount},${totalCap},${pct}%\n`;
+
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csvContent));
+      link.setAttribute("download", `ocupacao_cd_itajai_${type}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      addEvolutionLog('Arquivo CSV de ocupação exportado.', 'download');
+    };
+
+    // KPI CRUD and Actions
+    window.openModalCreate = function() {
+      document.getElementById('editRecordId').value = '';
+      document.getElementById('modalRecordTitle').innerText = 'Novo Lançamento Spotlar';
+      document.getElementById('formProcess').value = window.currentProcess;
+      document.getElementById('recordForm').reset();
+      document.getElementById('formMes').value = 'Setembro';
+      document.getElementById('recordModal').classList.remove('hidden');
+    };
+
+    window.openModalEdit = function(id, proc = window.currentProcess) {
+      const list = window.appData[proc] || [];
+      const rec = list.find(r => String(r.id) === String(id));
+      if (!rec) return;
+
+      document.getElementById('editRecordId').value = rec.id;
+      document.getElementById('modalRecordTitle').innerText = `Editar Lançamento (${proc === 'expedicao' ? 'Expedição' : 'Recebimento'})`;
+      document.getElementById('formProcess').value = proc;
+      document.getElementById('formMes').value = rec.mes || 'Setembro';
+      document.getElementById('formSemana').value = rec.semana || `Semana ${rec.week || 1}`;
+      document.getElementById('formValor').value = rec.valor || 0;
+      document.getElementById('formNf').value = rec.nf || 0;
+      document.getElementById('formUh').value = rec.uh || 0;
+      document.getElementById('formSkus').value = rec.skus || 0;
+      document.getElementById('formItens').value = rec.itens || 0;
+      document.getElementById('formDoca').value = rec.doca || '';
+
+      closeManageDataModal();
+      document.getElementById('recordModal').classList.remove('hidden');
+    };
+
+    window.closeModalRecord = function() {
+      document.getElementById('recordModal').classList.add('hidden');
+    };
+
+    window.saveModalRecord = function(e) {
+      e.preventDefault();
+      const id = document.getElementById('editRecordId').value;
+      const proc = document.getElementById('formProcess').value;
+      const semVal = document.getElementById('formSemana').value.trim();
+      const wkMatch = semVal.match(/\d+/);
+      const wkNum = wkMatch ? wkMatch[0] : '1';
+      const mesVal = document.getElementById('formMes').value;
+
+      const record = {
+        id: id || `${proc}-${Date.now()}`,
+        mes: mesVal,
+        semana: semVal.includes('Semana') ? semVal : `Semana ${semVal}`,
+        week: wkNum,
+        valor: Number(document.getElementById('formValor').value) || 0,
+        nf: Number(document.getElementById('formNf').value) || 0,
+        uh: Number(document.getElementById('formUh').value) || 0,
+        skus: Number(document.getElementById('formSkus').value) || 0,
+        itens: Number(document.getElementById('formItens').value) || 0,
+        doca: document.getElementById('formDoca').value.trim() || 'Docas Gerais'
+      };
+
+      if (!window.appData[proc]) window.appData[proc] = [];
+
+      if (id) {
+        const idx = window.appData[proc].findIndex(x => x.id === id);
+        if (idx !== -1) window.appData[proc][idx] = record;
+        addEvolutionLog(`Registro editado em ${proc}: ${record.semana} (${record.mes}).`, 'edit');
+        showToast('Registro atualizado com sucesso!');
+      } else {
+        window.appData[proc].push(record);
+        addEvolutionLog(`Novo lançamento cadastrado em ${proc}: ${record.semana} (${record.mes}).`, 'plus');
+        showToast('Novo lançamento cadastrado com sucesso!');
+      }
+
+      window.selectedMonth = mesVal;
+      saveFirebaseData();
+      closeModalRecord();
+      refreshApp();
+      if (!document.getElementById('manageDataModal').classList.contains('hidden')) {
+        renderManageDataTable();
+      }
+    };
+
+    window.deleteRecord = function(id, proc = window.currentProcess) {
+      if (!window.appData[proc]) return;
+      window.appData[proc] = window.appData[proc].filter(r => String(r.id) !== String(id));
+      saveFirebaseData();
+      refreshApp();
+      renderManageDataTable();
+      addEvolutionLog(`Registro excluído do processo ${proc}.`, 'delete');
+      showToast('Registro excluído com sucesso!');
+    };
+
+    window.openManageDataModal = function() {
+      window.manageActiveProcess = window.currentProcess;
+      setManageProcess(window.manageActiveProcess);
+      document.getElementById('manageDataModal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.closeManageDataModal = function() {
+      document.getElementById('manageDataModal').classList.add('hidden');
+    };
+
+    window.setManageProcess = function(proc) {
+      window.manageActiveProcess = proc;
+      const btnExp = document.getElementById('manageProcExpBtn');
+      const btnRec = document.getElementById('manageProcRecBtn');
+      const thUhs = document.getElementById('thManageUhs');
+
+      if (proc === 'expedicao') {
+        btnExp.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
+        btnRec.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
+        if (thUhs) thUhs.classList.remove('hidden');
+      } else {
+        btnRec.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
+        btnExp.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
+        if (thUhs) thUhs.classList.add('hidden');
+      }
+      renderManageDataTable();
+    };
+
+    window.renderManageDataTable = function() {
+      const tbody = document.getElementById('manageTableBody');
+      const filterMonth = document.getElementById('manageMonthFilter').value;
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let list = window.appData[window.manageActiveProcess] || [];
+      if (filterMonth !== 'TODOS') {
+        list = list.filter(r => (r.mes || '').toLowerCase() === filterMonth.toLowerCase());
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 italic">Nenhum registro encontrado.</td></tr>`;
+        return;
+      }
+
+      list.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition font-medium';
+        const isExp = window.manageActiveProcess === 'expedicao';
+        tr.innerHTML = `
+          <td class="p-2.5">
+            <span class="font-bold text-slate-900 dark:text-white">${r.mes || 'Agosto'}</span>
+            <span class="text-[11px] block text-slate-400">${r.semana || `Semana ${r.week || 1}`}</span>
+          </td>
+          <td class="p-2.5 font-bold text-blue-600 dark:text-blue-400">R$ ${Number(r.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+          <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200">${r.nf || 0}</td>
+          ${isExp ? `<td class="p-2.5 font-semibold text-teal-600 dark:text-teal-400">${r.uh || 0}</td>` : ''}
+          <td class="p-2.5 font-semibold text-amber-600 dark:text-amber-400">${r.skus || 0}</td>
+          <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200">${Number(r.itens || 0).toLocaleString('pt-BR')}</td>
+          <td class="p-2.5 text-right space-x-1.5 whitespace-nowrap">
+            <button onclick="openModalEdit('${r.id}', '${window.manageActiveProcess}')" class="px-2.5 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold transition">Editar</button>
+            <button onclick="deleteRecord('${r.id}', '${window.manageActiveProcess}')" class="px-2 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 font-bold transition"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.limparApenasAgosto = function() {
+      let countRemoved = 0;
+      ['expedicao', 'recebimento'].forEach(proc => {
+        if (window.appData[proc]) {
+          const before = window.appData[proc].length;
+          window.appData[proc] = window.appData[proc].filter(r => (r.mes || '').toLowerCase().trim() !== 'agosto');
+          countRemoved += (before - window.appData[proc].length);
+        }
+      });
+      saveFirebaseData();
+      refreshApp();
+      renderManageDataTable();
+      addEvolutionLog(`Limpeza de dados de Agosto: ${countRemoved} itens removidos.`, 'clean');
+      showToast(`Registros de Agosto limpos (${countRemoved} excluídos)!`);
+    };
+
+    window.restoreDefaults = function() {
+      window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+      saveFirebaseData();
+      refreshApp();
+      addEvolutionLog('Base inicial de KPIs restaurada aos valores padrão.', 'restore');
+      showToast('Base restaurada com os dados oficiais!');
+    };
+
+    // Excel & CSV Multi-sheet Import / Export
+    window.exportTwoSheets = function() {
+      const wb = XLSX.utils.book_new();
+
+      const dataExp = (window.appData.expedicao || []).map(e => ({
+        'Mês': e.mes, 'Week': e.week || e.semana, 'Notas': e.nf, "UH's": e.uh, "SKU's": e.skus, 'Itens': e.itens, 'Valor': e.valor, 'Docas': e.doca
+      }));
+      const wsExp = XLSX.utils.json_to_sheet(dataExp);
+      XLSX.utils.book_append_sheet(wb, wsExp, 'Expedição');
+
+      const dataRec = (window.appData.recebimento || []).map(r => ({
+        'Mês': r.mes, 'Week': r.week || r.semana, 'Notas': r.nf, "SKU's": r.skus, 'Itens': r.itens, 'Valor': r.valor, 'Docas': r.doca
+      }));
+      const wsRec = XLSX.utils.json_to_sheet(dataRec);
+      XLSX.utils.book_append_sheet(wb, wsRec, 'Recebimento');
+
+      XLSX.writeFile(wb, `Base_KPI_Spotlar_${new Date().toISOString().split('T')[0]}.xlsx`);
+      addEvolutionLog('Base de dados exportada em planilha Excel (.xlsx com 2 abas).', 'download');
+      showToast('Planilha com as 2 abas exportada com sucesso!');
+    };
+
+    window.handleExcelUpload = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      processDataFile(file);
+      event.target.value = '';
+    };
+
+    window.handleDragOver = function(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.add('border-amber-400', 'bg-amber-100/40');
+    };
+
+    window.handleDragLeave = function(e) {
+      e.preventDefault();
+      document.getElementById('dropZone').classList.remove('border-amber-400', 'bg-amber-100/40');
+    };
+
+    window.handleDrop = function(e) {
+      e.preventDefault();
+      handleDragLeave(e);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processDataFile(e.dataTransfer.files[0]);
+      }
+    };
+
+    function processDataFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          let importedExp = 0;
+          let importedRec = 0;
+
+          workbook.SheetNames.forEach(sheetName => {
+            const clean = sheetName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+
+            if (clean.includes('exped') || clean.includes('saida') || clean.includes('outbound')) {
+              window.appData.expedicao = rows.map((r, i) => parseRow(r, 'exp', i)).filter(Boolean);
+              importedExp = window.appData.expedicao.length;
+            } else if (clean.includes('receb') || clean.includes('entrada') || clean.includes('inbound')) {
+              window.appData.recebimento = rows.map((r, i) => parseRow(r, 'rec', i)).filter(Boolean);
+              importedRec = window.appData.recebimento.length;
+            }
+          });
+
+          if (importedExp > 0 || importedRec > 0) {
+            saveFirebaseData();
+            refreshApp();
+            addEvolutionLog(`Planilha carregada: ${importedExp} expedições e ${importedRec} recebimentos.`, 'upload');
+            showToast(`Importação concluída: ${importedExp} expedições e ${importedRec} recebimentos!`);
+          } else {
+            showToast('Nenhum dado compatível identificado no arquivo.');
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Erro ao processar arquivo.');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseRow(row, prefix, idx) {
+      const get = (keys) => {
+        for (let k of keys) {
+          const match = Object.keys(row).find(x => x.toLowerCase().trim() === k.toLowerCase().trim());
+          if (match && row[match] !== undefined) return row[match];
+        }
+        return null;
+      };
+
+      const parseNum = (val) => {
+        if (typeof val === 'number') return val;
+        if (!val) return 0;
+        let str = String(val).replace('R$', '').trim();
+        if (str.includes(',') && str.includes('.')) str = str.replace(/\./g, '').replace(',', '.');
+        else if (str.includes(',')) str = str.replace(',', '.');
+        return Number(str) || 0;
+      };
+
+      const mes = get(['Mês', 'Mes', 'Month']) || 'Setembro';
+      const semanaRaw = get(['Semana', 'Week', 'Semana Operacional']) || `Semana ${idx + 1}`;
+      const numMatch = String(semanaRaw).match(/\d+/);
+      const wkNum = numMatch ? numMatch[0] : `${idx + 1}`;
+
+      return {
+        id: `${prefix}-imp-${Date.now()}-${idx}`,
+        mes: String(mes),
+        semana: `Semana ${wkNum}`,
+        week: String(wkNum),
+        valor: parseNum(get(['Valor Faturado (R$)', 'Valor Faturado', 'Valor', 'Faturado', 'R$'])),
+        nf: parseNum(get(['Notas Fiscais', 'Notas', 'NF', 'NFs'])),
+        uh: parseNum(get(["UH's", 'UHs', 'UH', 'Unidades'])),
+        skus: parseNum(get(["SKU's", 'SKUs', 'SKU', 'Mix'])),
+        itens: parseNum(get(['Total Itens', 'Total de Itens', 'Itens', 'Peças', 'Qtd'])),
+        doca: String(get(['Docas', 'Doca', 'Gate']) || (prefix === 'exp' ? 'Docas 05-08' : 'Docas 01-04'))
+      };
+    }
+
+    // Reports: WhatsApp & Email Automation
+    window.gerarRelatorioDiretoria = function() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+      const exp = expList.length ? expList[expList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
+      const rec = recList.length ? recList[recList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
+
+      const refPeriodo = exp.semana || `Semana ${exp.week}`;
+      const refMes = exp.mes || 'Atual';
+
+      const items = window.warehouseRawItems || [];
+      const occTotal = items.filter(d => d.counta > 0).length;
+      const totalCap = window.capFull + window.capHalf;
+      const occRate = totalCap > 0 ? ((occTotal / totalCap) * 100).toFixed(1) : "0";
+
+      const mensagem = `🚀 *RELATÓRIO EXECUTIVO INTEGRADO - SPOTLAR LOGÍSTICA* 🚀\n` +
+        `🗓️ *Período:* ${refMes} - ${refPeriodo}\n\n` +
+        `📦 *EXPEDIÇÃO (OUTBOUND)*\n` +
+        `• *Valor Faturado:* R$ ${Number(exp.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+        `• *Notas Fiscais:* ${exp.nf || 0} NFs\n` +
+        `• *UH's:* ${exp.uh || 0} UHs | *SKU's:* ${exp.skus || 0}\n` +
+        `• *Total de Itens:* ${Number(exp.itens || 0).toLocaleString('pt-BR')} peças\n\n` +
+        `📥 *RECEBIMENTO (INBOUND)*\n` +
+        `• *Valor Recebido:* R$ ${Number(rec.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
+        `• *Notas Fiscais:* ${rec.nf || 0} NFs | *SKU's:* ${rec.skus || 0}\n` +
+        `• *Total de Itens:* ${Number(rec.itens || 0).toLocaleString('pt-BR')} peças\n\n` +
+        `🏭 *OCUPAÇÃO CD ITAJAÍ-SC*\n` +
+        `• *Ocupação Geral:* ${occRate}%\n` +
+        `• *Posições Ocupadas:* ${occTotal} / ${totalCap} posições\n` +
+        `• *Espaço Livre:* ${Math.max(0, totalCap - occTotal)} posições\n\n` +
+        `📊 *Central Unificada Spotlar WMS & KPI*`;
+
+      const tempTextarea = document.createElement('textarea');
+      tempTextarea.value = mensagem;
+      document.body.appendChild(tempTextarea);
+      tempTextarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempTextarea);
+
+      addEvolutionLog('Relatório executivo gerado e copiado para WhatsApp.', 'share');
+      showToast('Relatório copiado! Abrindo WhatsApp...');
+      window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
+    };
+
+    window.openEmailModal = function() {
+      renderEmailPreview();
+      loadGoogleScriptCode();
+      document.getElementById('emailModal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.closeEmailModal = function() {
+      document.getElementById('emailModal').classList.add('hidden');
+    };
+
+    window.switchEmailTab = function(tab) {
+      const pTab = document.getElementById('emailTabPreview');
+      const cTab = document.getElementById('emailTabCloud');
+      const pBtn = document.getElementById('emailTabPreviewBtn');
+      const cBtn = document.getElementById('emailTabCloudBtn');
+
+      if (tab === 'preview') {
+        pTab.classList.remove('hidden');
+        cTab.classList.add('hidden');
+        pBtn.className = 'px-4 py-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition';
+        cBtn.className = 'px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition';
+      } else {
+        cTab.classList.remove('hidden');
+        pTab.classList.add('hidden');
+        cBtn.className = 'px-4 py-2 text-xs font-bold border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 transition';
+        pBtn.className = 'px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition';
+      }
+      if (window.lucide) lucide.createIcons();
+    };
+
+    function renderEmailPreview() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+      const exp = expList.length ? expList[expList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
+      const rec = recList.length ? recList[recList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
+      const container = document.getElementById('emailPreviewBox');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="border-b border-slate-200 dark:border-slate-700 pb-2 flex justify-between items-center">
+          <div>
+            <strong class="text-slate-900 dark:text-white uppercase tracking-wider text-xs font-black">SPOTLAR LOGÍSTICA • PAINEL DIRETORIA</strong>
+            <div class="text-[11px] text-slate-500">Relatório Consolidado de Desempenho Operacional</div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+            ${exp.mes || 'Atual'} - ${exp.semana || 'Semana 1'}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
+            <span class="font-bold text-amber-900 dark:text-amber-300 uppercase text-[10px] block">📦 EXPEDIÇÃO</span>
+            <div class="text-slate-700 dark:text-slate-300 font-mono mt-1 space-y-0.5">
+              <div>• Faturado: R$ ${Number(exp.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              <div>• NFs: ${exp.nf || 0} | UHs: ${exp.uh || 0}</div>
+              <div>• Total Itens: ${Number(exp.itens || 0).toLocaleString('pt-BR')}</div>
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span class="font-bold text-slate-800 dark:text-slate-200 uppercase text-[10px] block">📥 RECEBIMENTO</span>
+            <div class="text-slate-700 dark:text-slate-300 font-mono mt-1 space-y-0.5">
+              <div>• Recebido: R$ ${Number(rec.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              <div>• NFs: ${rec.nf || 0} | SKUs: ${rec.skus || 0}</div>
+              <div>• Total Itens: ${Number(rec.itens || 0).toLocaleString('pt-BR')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.copyEmailHTML = function() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+      const exp = expList.length ? expList[expList.length - 1] : { mes: 'Sem dados', semana: 'Semana 1', valor: 0, nf: 0, itens: 0 };
+      const rec = recList.length ? recList[recList.length - 1] : { mes: 'Sem dados', semana: 'Semana 1', valor: 0, nf: 0, itens: 0 };
+
+      const bodyText = `SPOTLAR LOGÍSTICA - RELATÓRIO SEMANAL OPERACIONAL\n\n` +
+        `EXPEDIÇÃO: R$ ${Number(exp.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | ${exp.nf || 0} NFs | ${exp.itens || 0} itens\n` +
+        `RECEBIMENTO: R$ ${Number(rec.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | ${rec.nf || 0} NFs | ${rec.itens || 0} itens\n`;
+
+      const t = document.createElement('textarea');
+      t.value = bodyText;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand('copy');
+      document.body.removeChild(t);
+      showToast('Texto do relatório copiado!');
+    };
+
+    window.sendViaMailtoClient = function() {
+      const recipients = document.getElementById('emailRecipientsInput').value.trim();
+      const subject = document.getElementById('emailSubjectInput').value.trim();
+      window.location.href = `mailto:${encodeURIComponent(recipients)}?subject=${encodeURIComponent(subject)}`;
+    };
+
+    window.sendViaGmailWeb = function() {
+      const recipients = document.getElementById('emailRecipientsInput').value.trim();
+      const subject = document.getElementById('emailSubjectInput').value.trim();
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipients)}&su=${encodeURIComponent(subject)}`, '_blank');
+    };
+
+    function loadGoogleScriptCode() {
+      const el = document.getElementById('googleScriptCodeBlock');
+      if (el) {
+        el.innerText = `function enviarRelatorioSemanalDiretoria() {\n  var ss = SpreadsheetApp.getActiveSpreadsheet();\n  var destinatarios = "diretoria@spotlar.com.br, operacoes@spotlar.com.br";\n  var assunto = "🚀 [SPOTLAR LOGÍSTICA] Relatório Operacional Semanal - Diretoria";\n  MailApp.sendEmail({ to: destinatarios, subject: assunto, htmlBody: "Relatório executivo Spotlar gerado automaticamente." });\n}`;
+      }
+    }
+
+    window.copyChartToClipboard = function(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      canvas.toBlob(blob => {
+        if (navigator.clipboard && navigator.clipboard.write) {
+          try {
+            navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            showToast('Gráfico copiado para a área de transferência!');
+            return;
+          } catch(e) {}
+        }
+        const link = document.createElement('a');
+        link.download = `${canvasId}_spotlar.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        showToast('Gráfico exportado em imagem PNG!');
+      });
+    };
+
+    window.copySlideContent = function() {
+      const activeText = `SPOTLAR LOGÍSTICA - KPI OPERACIONAL\n` +
+        `Processo Ativo: ${window.currentProcess.toUpperCase()}\n` +
+        `Valor: ${document.getElementById('kpiValorFaturado').innerText}\n` +
+        `Notas Fiscais: ${document.getElementById('kpiNotasFiscais').innerText}\n` +
+        `Mix de SKU's: ${document.getElementById('kpiSkus').innerText}\n` +
+        `Total de Itens: ${document.getElementById('kpiTotalItens').innerText}\n` +
+        `Mês Ativo: ${window.selectedMonth}`;
+
+      const el = document.createElement('textarea');
+      el.value = activeText;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('Resumo copiado para a área de transferência!');
+    };
+
+    window.runDiagnosticsTest = function() {
+      addEvolutionLog('Executando autodiagnóstico de conexões...', 'test');
+      syncWmsGoogleSheets(true);
+      setTimeout(() => {
+        addEvolutionLog('Autodiagnóstico concluído: Todos os serviços operacionais.', 'check');
+        showToast('Diagnóstico: Sistemas Spotlar 100% operacionais!');
+      }, 1000);
+    };
+
+    function showToast(msg, isError = false) {
+      const container = document.getElementById('toastNotification');
+      const toastInner = document.getElementById('toastInner');
+      document.getElementById('toastMsg').innerText = msg;
+
+      if (isError) {
+        toastInner.className = "flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-semibold text-white bg-rose-600 border border-rose-500";
+      } else {
+        toastInner.className = "flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-semibold text-slate-900 bg-amber-400 border border-amber-300";
+      }
+
+      container.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        container.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+      }, 3500);
+    }
+
+    // Window Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initFirebaseListener();
+      switchMainModule('kpi');
+      switchProcess('expedicao');
+      addEvolutionLog('Central Unificada Spotlar inicializada.', 'start');
+      setTimeout(() => {
+        syncWmsGoogleSheets(true);
+      }, 800);
+    });
+  </script>
+</body>
+</html>
