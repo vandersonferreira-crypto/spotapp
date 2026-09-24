@@ -125,6 +125,18 @@
 
         <!-- Top Right Actions & Panel Toggle -->
         <div class="flex items-center gap-2 flex-wrap justify-end">
+          <!-- Seletor de Filial no Cabeçalho -->
+          <div class="flex items-center bg-slate-800/90 border border-slate-700 px-2.5 py-1 rounded-full shadow-inner">
+            <i class="fa-solid fa-location-dot text-amber-400 text-xs mr-1.5"></i>
+            <select id="headerFilialSelect" onchange="changeActiveFilial(this.value)" class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer">
+              <option value="TODAS" class="bg-slate-900 text-white">Todas as Filiais (Consolidado)</option>
+              <option value="Itajaí" class="bg-slate-900 text-white">CD Itajaí - SC</option>
+              <option value="Curitiba" class="bg-slate-900 text-white">Filial Curitiba - PR</option>
+              <option value="Florianópolis" class="bg-slate-900 text-white">Filial Florianópolis - SC</option>
+              <option value="São Paulo" class="bg-slate-900 text-white">Filial São Paulo - SP</option>
+            </select>
+          </div>
+
           <!-- Toggle Lateral Evolution Panel -->
           <button onclick="toggleLateralPanel()" id="btnLateralToggle" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow transition" title="Exibir / Ocultar Painel Lateral de Evolução">
             <i data-lucide="panel-right-open" class="w-3.5 h-3.5"></i>
@@ -182,16 +194,27 @@
         <!-- Sub-bar: Inbound/Outbound Switcher and Operations Toolbar -->
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
           
-          <!-- Process Selector (Expedição vs Recebimento) -->
-          <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-            <button id="tabBtnExpedicao" onclick="switchProcess('expedicao')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all bg-amber-400 text-slate-950 shadow-sm">
-              <i data-lucide="send" class="w-4 h-4"></i>
-              <span>Expedição (Outbound)</span>
-            </button>
-            <button id="tabBtnRecebimento" onclick="switchProcess('recebimento')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white">
-              <i data-lucide="inbox" class="w-4 h-4"></i>
-              <span>Recebimento (Inbound)</span>
-            </button>
+          <!-- Process Selector (Expedição vs Recebimento) & Filial Badges -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+              <button id="tabBtnExpedicao" onclick="switchProcess('expedicao')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all bg-amber-400 text-slate-950 shadow-sm">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Expedição (Outbound)</span>
+              </button>
+              <button id="tabBtnRecebimento" onclick="switchProcess('recebimento')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white">
+                <i data-lucide="inbox" class="w-4 h-4"></i>
+                <span>Recebimento (Inbound)</span>
+              </button>
+            </div>
+
+            <!-- Filial Fast Switcher Pills -->
+            <div class="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-semibold gap-1" id="filialPillsContainer">
+              <button onclick="changeActiveFilial('TODAS')" id="pillFilialTODAS" class="px-2.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold transition">Todas</button>
+              <button onclick="changeActiveFilial('Itajaí')" id="pillFilialItajaí" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition">Itajaí</button>
+              <button onclick="changeActiveFilial('Curitiba')" id="pillFilialCuritiba" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition">Curitiba</button>
+              <button onclick="changeActiveFilial('Florianópolis')" id="pillFilialFlorianópolis" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition">Floripa</button>
+              <button onclick="changeActiveFilial('São Paulo')" id="pillFilialSão Paulo" class="px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition">São Paulo</button>
+            </div>
           </div>
 
           <!-- Actions: Edit, Copy, Insert, Restore, Export -->
@@ -232,7 +255,7 @@
         <!-- Drag & Drop Zone -->
         <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('excelFileInput').click()" class="cursor-pointer border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-400 bg-slate-100/70 dark:bg-slate-900/40 hover:bg-amber-50/40 rounded-2xl py-2 px-4 text-center transition flex items-center justify-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-400">
           <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-500"></i>
-          <span>Arraste ou clique para carregar nova planilha com abas <strong>Expedição</strong> e <strong>Recebimento</strong> (.xlsx / .csv)</span>
+          <span>Arraste ou clique para carregar planilha com abas <strong>Expedição</strong> e <strong>Recebimento</strong> (.xlsx / .csv). Suporta coluna <strong>Filial</strong> (Itajaí, Curitiba, Florianópolis, São Paulo)</span>
         </div>
 
         <!-- KPI Numerical Cards -->
@@ -318,6 +341,7 @@
               <h3 class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-900 dark:text-white">
                 1. Painel Mensal (Acumulado por Mês)
               </h3>
+              <span id="activeFilialBadgeMonthly" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Todas as Filiais</span>
             </div>
             <span class="text-xs text-slate-500 dark:text-slate-400 italic hidden sm:inline">
               💡 Clique em qualquer mês no gráfico para filtrar as semanas abaixo
@@ -1033,16 +1057,28 @@
               <button id="manageProcRecBtn" onclick="setManageProcess('recebimento')" class="px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300">Recebimento</button>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Filtrar Mês:</span>
-            <select id="manageMonthFilter" onchange="renderManageDataTable()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todos os Meses</option>
-              <option value="Agosto">Agosto</option>
-              <option value="Setembro">Setembro</option>
-              <option value="Outubro">Outubro</option>
-              <option value="Novembro">Novembro</option>
-              <option value="Dezembro">Dezembro</option>
-            </select>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Filial:</span>
+              <select id="manageFilialFilter" onchange="renderManageDataTable()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200">
+                <option value="TODAS">Todas as Filiais</option>
+                <option value="Itajaí">Itajaí</option>
+                <option value="Curitiba">Curitiba</option>
+                <option value="Florianópolis">Florianópolis</option>
+                <option value="São Paulo">São Paulo</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Mês:</span>
+              <select id="manageMonthFilter" onchange="renderManageDataTable()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-semibold rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200">
+                <option value="TODOS">Todos os Meses</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Setembro">Setembro</option>
+                <option value="Outubro">Outubro</option>
+                <option value="Novembro">Novembro</option>
+                <option value="Dezembro">Dezembro</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -1050,6 +1086,7 @@
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
               <tr>
+                <th class="p-2.5">Filial</th>
                 <th class="p-2.5">Mês / Semana</th>
                 <th class="p-2.5">Valor (R$)</th>
                 <th class="p-2.5">NFs</th>
@@ -1089,7 +1126,16 @@
 
       <form id="recordForm" onsubmit="saveModalRecord(event)" class="p-6 space-y-4 text-xs sm:text-sm">
         <input type="hidden" id="editRecordId">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Filial *</label>
+            <select id="formFilial" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-bold">
+              <option value="Itajaí">CD Itajaí - SC</option>
+              <option value="Curitiba">Filial Curitiba - PR</option>
+              <option value="Florianópolis">Filial Florianópolis - SC</option>
+              <option value="São Paulo">Filial São Paulo - SP</option>
+            </select>
+          </div>
           <div>
             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Módulo / Processo *</label>
             <select id="formProcess" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 font-bold">
@@ -1241,38 +1287,30 @@
       Chart.register(ChartDataLabels);
     }
 
-    // Default Seed Data for KPI
-    const initialSpotlarData = {
-      expedicao: [
-        { id: 'exp-set-1', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 175552.88, nf: 67, uh: 16, skus: 275, itens: 657, doca: 'Docas 05-08' },
-        { id: 'exp-set-2', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 11209.00, nf: 9, uh: 11, skus: 71, itens: 166, doca: 'Docas 05-08' },
-        { id: 'exp-set-3', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 317759.69, nf: 53, uh: 48, skus: 733, itens: 1312, doca: 'Docas 05-08' },
-        { id: 'exp-set-4', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 12000.00, nf: 50, uh: 25, skus: 120, itens: 657, doca: 'Docas 05-08' }
-      ],
-      recebimento: [
-        { id: 'rec-set-1', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 141450.82, nf: 39, uh: 0, skus: 86, itens: 1162, doca: 'Docas 01-04' },
-        { id: 'rec-set-2', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 89557.51, nf: 37, uh: 0, skus: 85, itens: 803, doca: 'Docas 01-04' },
-        { id: 'rec-set-3', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 152731.95, nf: 75, uh: 0, skus: 123, itens: 1006, doca: 'Docas 01-04' },
-        { id: 'rec-set-4', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 14856.00, nf: 50, uh: 0, skus: 100, itens: 900, doca: 'Docas 01-04' }
-      ]
-    };
+    // Chart instances references
+    let chartFaturadoMonthly = null;
+    let chartVolumeMonthly = null;
+    let chartFaturadoWeek = null;
+    let chartVolumeWeek = null;
+    let gaugeChartInstance = null;
+    let overviewStatusChartInstance = null;
+    let aisleChartInstance = null;
+    let levelChartInstance = null;
 
-    // State Variables
+    // Warehouse default capacities
+    window.capFull = 112;
+    window.capHalf = 72;
+
+    // Global application state
     window.currentMainModule = 'kpi'; // 'kpi', 'wms', 'exec'
     window.currentProcess = 'expedicao';
+    window.currentFilial = 'TODAS'; // 'TODAS', 'Itajaí', 'Curitiba', 'Florianópolis', 'São Paulo'
     window.selectedMonth = 'Setembro';
     window.manageActiveProcess = 'expedicao';
     window.appData = { expedicao: [], recebimento: [] };
 
-    // WMS Warehouse initial rack positions
-    window.capFull = 112;
-    window.capHalf = 72;
-    window.wmsActiveSubTab = 'general';
-    window.lateralOpen = true;
-    window.evolutionLogs = [];
-
     window.warehouseRawItems = [
-      // Rua AA (132 slots)
+      // Rua AA (amostra inicial representativa)
       { mes: "Atual", endereco: "AA.01.01.A", counta: 18, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AA.01.01.B", counta: 19, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AA.01.2", counta: 1, tipo: "Posição Full" },
@@ -1297,391 +1335,63 @@
       { mes: "Atual", endereco: "AA.06.01.B", counta: 0, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AA.06.2", counta: 7, tipo: "Posição Full" },
       { mes: "Atual", endereco: "AA.06.3", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.07.01.A", counta: 11, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.07.01.B", counta: 3, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.07.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.07.3", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.08.01.A", counta: 4, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.08.01.B", counta: 6, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.08.2", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.08.3", counta: 8, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.09.01.A", counta: 4, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.09.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.09.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.09.3", counta: 6, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.10.01.A", counta: 19, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.10.01.B", counta: 3, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.10.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.10.3", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.11.01.A", counta: 9, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.11.01.B", counta: 25, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.11.2", counta: 7, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.11.3", counta: 3, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.12.01.A", counta: 5, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.12.01.B", counta: 9, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.12.2", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.12.3", counta: 8, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.13.01.A", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.13.01.B", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.13.2", counta: 10, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.13.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.14.01.A", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.14.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.14.2", counta: 5, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.14.3", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.15.01.A", counta: 18, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.15.01.B", counta: 4, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.15.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.15.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.16.01.A", counta: 17, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.16.01.B", counta: 8, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.16.2", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.16.3", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.17.01.A", counta: 7, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.17.01.B", counta: 46, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.17.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.17.3", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.18.01.A", counta: 14, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.18.01.B", counta: 15, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.18.2", counta: 8, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.18.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.19.01.A", counta: 15, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.19.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.19.2", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.19.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.20.01.A", counta: 14, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.20.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.20.2", counta: 10, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.20.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.21.01.A", counta: 5, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.21.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.21.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.21.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.22.01.A", counta: 13, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.22.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.22.2", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.22.3", counta: 17, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.23.01.A", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.23.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.23.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.23.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.24.01.A", counta: 5, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.24.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AA.24.2", counta: 5, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.24.3", counta: 6, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.25.1", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.25.2", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.25.3", counta: 6, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.26.1", counta: 9, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.26.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.26.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.27.1", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.27.2", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.27.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.28.1", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.28.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.28.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.29.1", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.29.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.29.3", counta: 3, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.30.1", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.30.2", counta: 5, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.30.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.31.1", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.31.2", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.31.3", counta: 8, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.32.1", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.32.2", counta: 14, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.32.3", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.33.1", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.33.2", counta: 5, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.33.3", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.34.1", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.34.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.34.3", counta: 4, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.35.1", counta: 11, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.35.2", counta: 8, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.35.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.36.1", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.36.2", counta: 3, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AA.36.3", counta: 4, tipo: "Posição Full" },
-
-      // Rua AB (37 slots)
+      // Rua AB
       { mes: "Atual", endereco: "AB.01.01.A", counta: 0, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AB.01.01.B", counta: 16, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AB.01.2", counta: 2, tipo: "Posição Full" },
       { mes: "Atual", endereco: "AB.01.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.01.6", counta: 1, tipo: "Posição Full" },
       { mes: "Atual", endereco: "AB.02.01.A", counta: 4, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AB.02.01.B", counta: 2, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AB.02.2", counta: 1, tipo: "Posição Full" },
       { mes: "Atual", endereco: "AB.02.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.02.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.03.01.A", counta: 2, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.03.01.B", counta: 6, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.03.2", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.03.3", counta: 3, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.03.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.04.01.A", counta: 3, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.04.01.B", counta: 6, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.04.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.04.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.04.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.05.01.A", counta: 4, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.05.01.B", counta: 6, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.05.2", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.05.3", counta: 0, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.05.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.06.01.A", counta: 2, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.06.01.B", counta: 28, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AB.06.2", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.06.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.06.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.07.1", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.07.2", counta: 28, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.07.3", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.07.6", counta: 1, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.08.1", counta: 2, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.08.2", counta: 28, tipo: "Posição Full" },
-      { mes: "Atual", endereco: "AB.08.3", counta: 1, tipo: "Posição Full" },
-
-      // Rua AC (12 slots)
+      // Rua AC
       { mes: "Atual", endereco: "AC.01.01.A", counta: 0, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AC.01.01.B", counta: 0, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AC.02.01.A", counta: 0, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AC.02.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.03.01.A", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.03.01.B", counta: 0, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.04.01.A", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.04.01.B", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.05.01.A", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.05.01.B", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.06.01.A", counta: 1, tipo: "Meia Posição" },
-      { mes: "Atual", endereco: "AC.06.01.B", counta: 1, tipo: "Meia Posição" },
       { mes: "Atual", endereco: "AC.08.1", counta: 1, tipo: "Posição Full" }
     ];
 
-    // Chart Handles
-    let chartFaturadoMonthly = null;
-    let chartVolumeMonthly = null;
-    let chartFaturadoWeek = null;
-    let chartVolumeWeek = null;
-    let gaugeChartInstance = null;
-    let overviewStatusChartInstance = null;
-    let aisleChartInstance = null;
-    let levelChartInstance = null;
-
-    // Logging helper for lateral evolution panel
-    window.addEvolutionLog = function(msg, icon = 'info') {
-      const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      window.evolutionLogs.unshift({ time, msg, icon });
-      if (window.evolutionLogs.length > 25) window.evolutionLogs.pop();
-      renderLateralLogs();
-      updateLateralSnapshot();
+    // Default Seed Data for KPI with multi-filial support
+    const initialSpotlarData = {
+      expedicao: [
+        { id: 'exp-itj-1', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 175552.88, nf: 67, uh: 16, skus: 275, itens: 657, doca: 'Docas 05-08' },
+        { id: 'exp-itj-2', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 11209.00, nf: 9, uh: 11, skus: 71, itens: 166, doca: 'Docas 05-08' },
+        { id: 'exp-itj-3', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 317759.69, nf: 53, uh: 48, skus: 733, itens: 1312, doca: 'Docas 05-08' },
+        { id: 'exp-itj-4', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 12000.00, nf: 50, uh: 25, skus: 120, itens: 657, doca: 'Docas 05-08' },
+        { id: 'exp-cwb-1', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 128450.00, nf: 45, uh: 12, skus: 180, itens: 490, doca: 'Doca Principal' },
+        { id: 'exp-cwb-2', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 142300.50, nf: 52, uh: 15, skus: 210, itens: 580, doca: 'Doca Principal' },
+        { id: 'exp-cwb-3', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 165800.00, nf: 58, uh: 18, skus: 240, itens: 640, doca: 'Doca Principal' },
+        { id: 'exp-cwb-4', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 95400.00, nf: 38, uh: 10, skus: 150, itens: 390, doca: 'Doca Principal' },
+        { id: 'exp-fln-1', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 88900.00, nf: 32, uh: 8, skus: 130, itens: 320, doca: 'Doca Sul' },
+        { id: 'exp-fln-2', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 94200.00, nf: 36, uh: 9, skus: 145, itens: 355, doca: 'Doca Sul' },
+        { id: 'exp-fln-3', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 105600.00, nf: 41, uh: 11, skus: 160, itens: 410, doca: 'Doca Sul' },
+        { id: 'exp-fln-4', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 78300.00, nf: 29, uh: 7, skus: 115, itens: 290, doca: 'Doca Sul' },
+        { id: 'exp-spo-1', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 245000.00, nf: 85, uh: 28, skus: 390, itens: 980, doca: 'Hub Sudeste' },
+        { id: 'exp-spo-2', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 289000.00, nf: 94, uh: 32, skus: 420, itens: 1120, doca: 'Hub Sudeste' },
+        { id: 'exp-spo-3', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 312000.00, nf: 102, uh: 35, skus: 460, itens: 1250, doca: 'Hub Sudeste' },
+        { id: 'exp-spo-4', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 198000.00, nf: 70, uh: 22, skus: 310, itens: 810, doca: 'Hub Sudeste' }
+      ],
+      recebimento: [
+        { id: 'rec-itj-1', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 141450.82, nf: 39, uh: 0, skus: 86, itens: 1162, doca: 'Docas 01-04' },
+        { id: 'rec-itj-2', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 89557.51, nf: 37, uh: 0, skus: 85, itens: 803, doca: 'Docas 01-04' },
+        { id: 'rec-itj-3', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 152731.95, nf: 75, uh: 0, skus: 123, itens: 1006, doca: 'Docas 01-04' },
+        { id: 'rec-itj-4', filial: 'Itajaí', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 14856.00, nf: 50, uh: 0, skus: 100, itens: 900, doca: 'Docas 01-04' },
+        { id: 'rec-cwb-1', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 98500.00, nf: 28, uh: 0, skus: 65, itens: 780, doca: 'Doca Inbound' },
+        { id: 'rec-cwb-2', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 112000.00, nf: 32, uh: 0, skus: 74, itens: 890, doca: 'Doca Inbound' },
+        { id: 'rec-cwb-3', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 125000.00, nf: 36, uh: 0, skus: 82, itens: 950, doca: 'Doca Inbound' },
+        { id: 'rec-cwb-4', filial: 'Curitiba', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 65000.00, nf: 20, uh: 0, skus: 50, itens: 520, doca: 'Doca Inbound' },
+        { id: 'rec-fln-1', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 62000.00, nf: 19, uh: 0, skus: 42, itens: 480, doca: 'Doca Inbound' },
+        { id: 'rec-fln-2', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 71000.00, nf: 22, uh: 0, skus: 49, itens: 540, doca: 'Doca Inbound' },
+        { id: 'rec-fln-3', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 83000.00, nf: 26, uh: 0, skus: 56, itens: 610, doca: 'Doca Inbound' },
+        { id: 'rec-fln-4', filial: 'Florianópolis', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 45000.00, nf: 15, uh: 0, skus: 38, itens: 370, doca: 'Doca Inbound' },
+        { id: 'rec-spo-1', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 1', week: '1', valor: 195000.00, nf: 55, uh: 0, skus: 110, itens: 1450, doca: 'Recepção Matriz SP' },
+        { id: 'rec-spo-2', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 2', week: '2', valor: 215000.00, nf: 62, uh: 0, skus: 125, itens: 1620, doca: 'Recepção Matriz SP' },
+        { id: 'rec-spo-3', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 3', week: '3', valor: 240000.00, nf: 68, uh: 0, skus: 135, itens: 1780, doca: 'Recepção Matriz SP' },
+        { id: 'rec-spo-4', filial: 'São Paulo', mes: 'Setembro', semana: 'Semana 4', week: '4', valor: 135000.00, nf: 40, uh: 0, skus: 88, itens: 1050, doca: 'Recepção Matriz SP' }
+      ]
     };
 
-    function renderLateralLogs() {
-      const container = document.getElementById('lateralLogsContainer');
-      if (!container) return;
-      container.innerHTML = window.evolutionLogs.map(log => `
-        <div class="p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-[11px] flex items-start gap-2">
-          <span class="text-amber-500 font-bold text-[10px] mt-0.5">•</span>
-          <div class="flex-1 leading-tight">
-            <span class="text-slate-800 dark:text-slate-200">${log.msg}</span>
-            <span class="block text-[9px] text-slate-400 mt-0.5">${log.time}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    window.clearActivityLogs = function() {
-      window.evolutionLogs = [];
-      renderLateralLogs();
-      showToast('Histórico de eventos limpo.');
-    };
-
-    function updateLateralSnapshot() {
-      const expList = window.appData?.expedicao || [];
-      const recList = window.appData?.recebimento || [];
-      const totalExp = expList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
-      const totalRec = recList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
-
-      const items = window.warehouseRawItems || [];
-      const fullOccupied = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
-      const halfOccupied = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
-      const totalOccupied = fullOccupied + halfOccupied;
-      const totalCap = window.capFull + window.capHalf;
-      const occRate = totalCap > 0 ? ((totalOccupied / totalCap) * 100) : 0;
-      const totalFree = Math.max(0, totalCap - totalOccupied);
-
-      const snapExp = document.getElementById('lateralSnapExp');
-      const snapRec = document.getElementById('lateralSnapRec');
-      const snapOcc = document.getElementById('lateralSnapOcc');
-      const snapFree = document.getElementById('lateralSnapFree');
-
-      if (snapExp) snapExp.innerText = `R$ ${Math.round(totalExp / 1000)}k`;
-      if (snapRec) snapRec.innerText = `R$ ${Math.round(totalRec / 1000)}k`;
-      if (snapOcc) snapOcc.innerText = `${occRate.toFixed(1)}%`;
-      if (snapFree) snapFree.innerText = `${totalFree} pos.`;
-
-      // Update Executive 360 values
-      const execFat = document.getElementById('execKpiFaturado');
-      const execRec = document.getElementById('execKpiRecebido');
-      const execOcc = document.getElementById('execKpiOcupacao');
-      const execItensExp = document.getElementById('execKpiItensExp');
-      const execItensRec = document.getElementById('execKpiItensRec');
-      const execSlotsLivre = document.getElementById('execKpiSlotsLivre');
-
-      if (execFat) execFat.innerText = totalExp.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      if (execRec) execRec.innerText = totalRec.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      if (execOcc) execOcc.innerText = `${occRate.toFixed(1)}%`;
-      if (execItensExp) execItensExp.innerText = `Total de peças expedidas: ${expList.reduce((a, b) => a + (Number(b.itens) || 0), 0).toLocaleString('pt-BR')}`;
-      if (execItensRec) execItensRec.innerText = `Total de peças recebidas: ${recList.reduce((a, b) => a + (Number(b.itens) || 0), 0).toLocaleString('pt-BR')}`;
-      if (execSlotsLivre) execSlotsLivre.innerText = `Posições livres para novo recebimento: ${totalFree}`;
-    }
-
-    // Toggle Lateral Panel
-    window.toggleLateralPanel = function() {
-      const panel = document.getElementById('lateralEvolutionPanel');
-      if (!panel) return;
-      window.lateralOpen = !window.lateralOpen;
-      if (window.lateralOpen) {
-        panel.classList.remove('hidden');
-      } else {
-        panel.classList.add('hidden');
-      }
-      setTimeout(() => {
-        if (window.currentMainModule === 'kpi') refreshApp();
-        if (window.currentMainModule === 'wms') renderWmsDashboard();
-      }, 150);
-    };
-
-    // Firebase Listener
-    function initFirebaseListener() {
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          window.appData = docSnap.data();
-          addEvolutionLog('Dados operacionais sincronizados via Firestore.', 'cloud');
-        } else {
-          setDoc(docRef, initialSpotlarData);
-          window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
-          addEvolutionLog('Base inicial gravada com sucesso no Firestore.', 'check');
-        }
-        refreshApp();
-        updateLateralSnapshot();
-        const fbStatus = document.getElementById('lateralFirebaseStatus');
-        if (fbStatus) fbStatus.innerText = 'Sincronizado';
-      }, (error) => {
-        console.error("Firebase sync error:", error);
-        const fbStatus = document.getElementById('lateralFirebaseStatus');
-        if (fbStatus) fbStatus.innerText = 'Offline';
-        addEvolutionLog('Aviso: Operando em memória local temporária.', 'alert');
-      });
-    }
-
-    async function saveFirebaseData() {
-      try {
-        await setDoc(docRef, window.appData);
-        addEvolutionLog('Alterações salvas e enviadas à nuvem.', 'check');
-      } catch (e) {
-        console.error("Firebase save error:", e);
-        showToast("Erro ao sincronizar com Firebase!");
-      }
-    }
-
-    // Module Navigation Switcher
-    window.switchMainModule = function(mod) {
-      window.currentMainModule = mod;
-
-      const kpiSec = document.getElementById('moduleKpiSection');
-      const wmsSec = document.getElementById('moduleWmsSection');
-      const execSec = document.getElementById('moduleExecSection');
-
-      const navKpi = document.getElementById('mainNavKpi');
-      const navWms = document.getElementById('mainNavWms');
-      const navExec = document.getElementById('mainNavExec');
-
-      const mobKpi = document.getElementById('mobNavKpi');
-      const mobWms = document.getElementById('mobNavWms');
-      const mobExec = document.getElementById('mobNavExec');
-
-      const activeClass = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-black shadow-sm transition';
-      const inactiveClass = 'flex items-center gap-2 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition';
-
-      const mobActiveClass = 'px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold whitespace-nowrap';
-      const mobInactiveClass = 'px-3 py-1.5 rounded-lg text-slate-300 whitespace-nowrap';
-
-      if (kpiSec) kpiSec.classList.add('hidden');
-      if (wmsSec) wmsSec.classList.add('hidden');
-      if (execSec) execSec.classList.add('hidden');
-
-      if (navKpi) navKpi.className = inactiveClass;
-      if (navWms) navWms.className = inactiveClass;
-      if (navExec) navExec.className = inactiveClass;
-
-      if (mobKpi) mobKpi.className = mobInactiveClass;
-      if (mobWms) mobWms.className = mobInactiveClass;
-      if (mobExec) mobExec.className = mobInactiveClass;
-
-      if (mod === 'kpi') {
-        if (kpiSec) kpiSec.classList.remove('hidden');
-        if (navKpi) navKpi.className = activeClass;
-        if (mobKpi) mobKpi.className = mobActiveClass;
-        refreshApp();
-      } else if (mod === 'wms') {
-        if (wmsSec) wmsSec.classList.remove('hidden');
-        if (navWms) navWms.className = activeClass;
-        if (mobWms) mobWms.className = mobActiveClass;
-        renderWmsDashboard();
-      } else if (mod === 'exec') {
-        if (execSec) execSec.classList.remove('hidden');
-        if (navExec) navExec.className = activeClass;
-        if (mobExec) mobExec.className = mobActiveClass;
-        updateLateralSnapshot();
-      }
-
-      addEvolutionLog(`Navegação alterada para ${mod.toUpperCase()}.`, 'navigate');
-      if (window.lucide) lucide.createIcons();
-    };
-
-    // WMS Sub-tab Navigation
-    window.switchWmsSubTab = function(subTab) {
-      window.wmsActiveSubTab = subTab;
-      const vGen = document.getElementById('wmsViewGeneral');
-      const vMap = document.getElementById('wmsViewMap');
-      const vSpat = document.getElementById('wmsViewSpatial');
-
-      const btnGen = document.getElementById('wmsSubTabGeneral');
-      const btnMap = document.getElementById('wmsSubTabMap');
-      const btnSpat = document.getElementById('wmsSubTabSpatial');
-
-      const activeClass = 'px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold shadow-xs';
-      const inactiveClass = 'px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white';
-
-      if (vGen) vGen.classList.add('hidden');
-      if (vMap) vMap.classList.add('hidden');
-      if (vSpat) vSpat.classList.add('hidden');
-
-      if (btnGen) btnGen.className = inactiveClass;
-      if (btnMap) btnMap.className = inactiveClass;
-      if (btnSpat) btnSpat.className = inactiveClass;
-
-      if (subTab === 'general') {
-        if (vGen) vGen.classList.remove('hidden');
-        if (btnGen) btnGen.className = activeClass;
-      } else if (subTab === 'map') {
-        if (vMap) vMap.classList.remove('hidden');
-        if (btnMap) btnMap.className = activeClass;
-        renderWarehouseMap();
-      } else if (subTab === 'spatial') {
-        if (vSpat) vSpat.classList.remove('hidden');
-        if (btnSpat) btnSpat.className = activeClass;
-      }
-
-      setTimeout(renderWmsDashboard, 30);
-    };
-
-    // Theme Management
     window.initTheme = function() {
       const saved = localStorage.getItem('spotlar_theme');
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -1699,7 +1409,7 @@
       localStorage.setItem('spotlar_theme', isDark ? 'dark' : 'light');
       updateThemeUI();
       refreshApp();
-      renderWmsDashboard();
+      if (window.renderWmsDashboard) window.renderWmsDashboard();
     };
 
     function updateThemeUI() {
@@ -1712,6 +1422,108 @@
         if (window.lucide) lucide.createIcons();
       }
     }
+
+    window.initFirebaseListener = function() {
+      try {
+        onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            window.appData = docSnap.data();
+            const lateralFb = document.getElementById('lateralFirebaseStatus');
+            if (lateralFb) lateralFb.innerText = 'Sincronizado';
+          } else {
+            setDoc(docRef, initialSpotlarData);
+            window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+          }
+          refreshApp();
+          if (window.renderWmsDashboard) window.renderWmsDashboard();
+          if (document.getElementById('manageDataModal') && !document.getElementById('manageDataModal').classList.contains('hidden')) {
+            renderManageDataTable();
+          }
+        }, (error) => {
+          console.warn("Firebase listener em modo offline/fallback local:", error);
+          const lateralFb = document.getElementById('lateralFirebaseStatus');
+          if (lateralFb) lateralFb.innerText = 'Modo Local';
+          if (!window.appData || (!window.appData.expedicao?.length && !window.appData.recebimento?.length)) {
+            window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+            refreshApp();
+          }
+        });
+      } catch (err) {
+        console.warn("Erro ao iniciar Firebase:", err);
+        window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+        refreshApp();
+      }
+    };
+
+    window.saveFirebaseData = async function() {
+      try {
+        await setDoc(docRef, window.appData);
+        addEvolutionLog('Dados persistidos com sucesso na nuvem.', 'sync');
+      } catch (e) {
+        console.warn("Salvando em cache local:", e);
+        addEvolutionLog('Dados atualizados na sessão local.', 'info');
+      }
+    };
+
+    window.switchMainModule = function(mod) {
+      window.currentMainModule = mod;
+      const secKpi = document.getElementById('moduleKpiSection');
+      const secWms = document.getElementById('moduleWmsSection');
+      const secExec = document.getElementById('moduleExecSection');
+
+      const btnKpi = document.getElementById('mainNavKpi');
+      const btnWms = document.getElementById('mainNavWms');
+      const btnExec = document.getElementById('mainNavExec');
+
+      const mobKpi = document.getElementById('mobNavKpi');
+      const mobWms = document.getElementById('mobNavWms');
+      const mobExec = document.getElementById('mobNavExec');
+
+      const activeClassDesk = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 text-slate-950 font-black shadow-sm transition';
+      const inactiveClassDesk = 'flex items-center gap-2 px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition';
+
+      const activeClassMob = 'px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold whitespace-nowrap';
+      const inactiveClassMob = 'px-3 py-1.5 rounded-lg text-slate-300 whitespace-nowrap';
+
+      if (secKpi) secKpi.classList.toggle('hidden', mod !== 'kpi');
+      if (secWms) secWms.classList.toggle('hidden', mod !== 'wms');
+      if (secExec) secExec.classList.toggle('hidden', mod !== 'exec');
+
+      if (btnKpi) btnKpi.className = mod === 'kpi' ? activeClassDesk : inactiveClassDesk;
+      if (btnWms) btnWms.className = mod === 'wms' ? activeClassDesk : inactiveClassDesk;
+      if (btnExec) btnExec.className = mod === 'exec' ? activeClassDesk : inactiveClassDesk;
+
+      if (mobKpi) mobKpi.className = mod === 'kpi' ? activeClassMob : inactiveClassMob;
+      if (mobWms) mobWms.className = mod === 'wms' ? activeClassMob : inactiveClassMob;
+      if (mobExec) mobExec.className = mod === 'exec' ? activeClassMob : inactiveClassMob;
+
+      if (mod === 'wms' && window.renderWmsDashboard) {
+        window.renderWmsDashboard();
+      } else if (mod === 'exec') {
+        updateExecutiveDashboard();
+      } else {
+        refreshApp();
+      }
+
+      addEvolutionLog(`Módulo ativo: ${mod.toUpperCase()}`, 'nav');
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.switchWmsSubTab = function(sub) {
+      const views = ['general', 'map', 'spatial'];
+      views.forEach(v => {
+        const el = document.getElementById(`wmsView${v.charAt(0).toUpperCase() + v.slice(1)}`);
+        const btn = document.getElementById(`wmsSubTab${v.charAt(0).toUpperCase() + v.slice(1)}`);
+        if (el) el.classList.toggle('hidden', v !== sub);
+        if (btn) {
+          btn.className = v === sub
+            ? 'px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold shadow-xs'
+            : 'px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white';
+        }
+      });
+      if (window.renderWmsDashboard) window.renderWmsDashboard();
+      if (window.lucide) lucide.createIcons();
+    };
 
     window.switchProcess = function(proc) {
       window.currentProcess = proc;
@@ -1753,16 +1565,282 @@
         if (chartWeek2Badge) chartWeek2Badge.innerText = 'RECEBIMENTO';
         if (chartWeek2Title) chartWeek2Title.innerText = 'VOLUME RECEBIDO POR WEEK';
       }
+
       refreshApp();
     };
 
+    window.toggleLateralPanel = function() {
+      const panel = document.getElementById('lateralEvolutionPanel');
+      if (panel) {
+        panel.classList.toggle('hidden');
+      }
+    };
+
+    window.addEvolutionLog = function(msg, type = 'info') {
+      const container = document.getElementById('lateralLogsContainer');
+      if (!container) return;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      let iconColor = 'text-amber-500';
+      let iconName = 'info';
+
+      if (type === 'sync' || type === 'check') {
+        iconColor = 'text-emerald-500';
+        iconName = 'check-circle-2';
+      } else if (type === 'filter') {
+        iconColor = 'text-blue-500';
+        iconName = 'filter';
+      } else if (type === 'alert') {
+        iconColor = 'text-rose-500';
+        iconName = 'alert-triangle';
+      }
+
+      const item = document.createElement('div');
+      item.className = 'p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-start gap-2 text-[11px] leading-tight';
+      item.innerHTML = `
+        <i data-lucide="${iconName}" class="w-3.5 h-3.5 ${iconColor} shrink-0 mt-0.5"></i>
+        <div class="flex-1">
+          <span class="text-slate-800 dark:text-slate-200">${msg}</span>
+          <span class="block text-[9px] text-slate-400 mt-0.5">${timeStr}</span>
+        </div>
+      `;
+      container.prepend(item);
+
+      while (container.children.length > 25) {
+        container.removeChild(container.lastChild);
+      }
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.clearActivityLogs = function() {
+      const container = document.getElementById('lateralLogsContainer');
+      if (container) container.innerHTML = '<div class="text-[10px] text-slate-400 italic p-2">Nenhum evento recente.</div>';
+    };
+
+    function updateLateralSnapshot() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+      const totExp = expList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+      const totRec = recList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+
+      const items = window.warehouseRawItems || [];
+      const totalCap = (window.capFull || 112) + (window.capHalf || 72);
+      const occTotal = items.filter(d => d.counta > 0).length;
+      const freeTotal = Math.max(0, totalCap - occTotal);
+      const occPct = totalCap > 0 ? ((occTotal / totalCap) * 100).toFixed(0) : "0";
+
+      const snapExp = document.getElementById('lateralSnapExp');
+      const snapRec = document.getElementById('lateralSnapRec');
+      const snapOcc = document.getElementById('lateralSnapOcc');
+      const snapFree = document.getElementById('lateralSnapFree');
+
+      if (snapExp) snapExp.innerText = `R$ ${Math.round(totExp / 1000)}k`;
+      if (snapRec) snapRec.innerText = `R$ ${Math.round(totRec / 1000)}k`;
+      if (snapOcc) snapOcc.innerText = `${occPct}%`;
+      if (snapFree) snapFree.innerText = `${freeTotal}`;
+    }
+
+    function updateExecutiveDashboard() {
+      const expList = window.appData?.expedicao || [];
+      const recList = window.appData?.recebimento || [];
+
+      const totExp = expList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+      const totItensExp = expList.reduce((acc, r) => acc + (Number(r.itens) || 0), 0);
+      const totRec = recList.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
+      const totItensRec = recList.reduce((acc, r) => acc + (Number(r.itens) || 0), 0);
+
+      const items = window.warehouseRawItems || [];
+      const totalCap = (window.capFull || 112) + (window.capHalf || 72);
+      const occTotal = items.filter(d => d.counta > 0).length;
+      const freeTotal = Math.max(0, totalCap - occTotal);
+      const occPct = totalCap > 0 ? ((occTotal / totalCap) * 100).toFixed(1) : "0";
+
+      const elFaturado = document.getElementById('execKpiFaturado');
+      const elItensExp = document.getElementById('execKpiItensExp');
+      const elRecebido = document.getElementById('execKpiRecebido');
+      const elItensRec = document.getElementById('execKpiItensRec');
+      const elOcupacao = document.getElementById('execKpiOcupacao');
+      const elSlotsLivre = document.getElementById('execKpiSlotsLivre');
+
+      if (elFaturado) elFaturado.innerText = totExp.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (elItensExp) elItensExp.innerText = `Total de peças expedidas: ${totItensExp.toLocaleString('pt-BR')}`;
+      if (elRecebido) elRecebido.innerText = totRec.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (elItensRec) elItensRec.innerText = `Total de peças recebidas: ${totItensRec.toLocaleString('pt-BR')}`;
+      if (elOcupacao) elOcupacao.innerText = `${occPct}%`;
+      if (elSlotsLivre) elSlotsLivre.innerText = `Posições livres para recebimento: ${freeTotal}`;
+    }
+
+    window.openManageDataModal = function() {
+      window.manageActiveProcess = window.currentProcess;
+      setManageProcess(window.manageActiveProcess);
+      document.getElementById('manageDataModal').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    };
+
+    window.closeManageDataModal = function() {
+      document.getElementById('manageDataModal').classList.add('hidden');
+    };
+
+    window.setManageProcess = function(proc) {
+      window.manageActiveProcess = proc;
+      const btnExp = document.getElementById('manageProcExpBtn');
+      const btnRec = document.getElementById('manageProcRecBtn');
+      const thUhs = document.getElementById('thManageUhs');
+
+      if (proc === 'expedicao') {
+        if (btnExp) btnExp.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
+        if (btnRec) btnRec.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
+        if (thUhs) thUhs.classList.remove('hidden');
+      } else {
+        if (btnRec) btnRec.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
+        if (btnExp) btnExp.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
+        if (thUhs) thUhs.classList.add('hidden');
+      }
+      renderManageDataTable();
+    };
+
+    window.deleteRecord = function(id, proc = window.currentProcess) {
+      if (!window.appData[proc]) return;
+      window.appData[proc] = window.appData[proc].filter(r => String(r.id) !== String(id));
+      window.saveFirebaseData();
+      refreshApp();
+      renderManageDataTable();
+      showToast('Registro excluído com sucesso!');
+    };
+
+    window.limparApenasAgosto = function() {
+      ['expedicao', 'recebimento'].forEach(proc => {
+        if (window.appData[proc]) {
+          window.appData[proc] = window.appData[proc].filter(r => (r.mes || '').toLowerCase().trim() !== 'agosto');
+        }
+      });
+      window.saveFirebaseData();
+      refreshApp();
+      renderManageDataTable();
+      showToast('Registros de Agosto removidos.');
+    };
+
+    window.restoreDefaults = function() {
+      window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
+      window.saveFirebaseData();
+      refreshApp();
+      showToast('Base padrão restaurada com sucesso!');
+    };
+
+    window.handleDragOver = function(e) {
+      e.preventDefault();
+      document.getElementById('dropZone')?.classList.add('border-amber-400', 'bg-amber-100/40');
+    };
+
+    window.handleDragLeave = function(e) {
+      e.preventDefault();
+      document.getElementById('dropZone')?.classList.remove('border-amber-400', 'bg-amber-100/40');
+    };
+
+    window.handleDrop = function(e) {
+      e.preventDefault();
+      window.handleDragLeave(e);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processDataFile(e.dataTransfer.files[0]);
+      }
+    };
+
+    window.handleExcelUpload = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      processDataFile(file);
+      event.target.value = '';
+    };
+
+    function processDataFile(file) {
+      const fileName = file.name.toLowerCase();
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          let importedExp = 0;
+          let importedRec = 0;
+
+          workbook.SheetNames.forEach(sheetName => {
+            const clean = sheetName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet);
+
+            if (clean.includes('exped') || clean.includes('saida') || clean.includes('outbound')) {
+              window.appData.expedicao = rows.map((r, i) => parseRow(r, 'exp', i)).filter(Boolean);
+              importedExp = window.appData.expedicao.length;
+            } else if (clean.includes('receb') || clean.includes('entrada') || clean.includes('inbound')) {
+              window.appData.recebimento = rows.map((r, i) => parseRow(r, 'rec', i)).filter(Boolean);
+              importedRec = window.appData.recebimento.length;
+            }
+          });
+
+          if (importedExp > 0 || importedRec > 0) {
+            window.saveFirebaseData();
+            refreshApp();
+            showToast(`Importação concluída: ${importedExp} expedições e ${importedRec} recebimentos.`);
+          } else {
+            showToast('Nenhum dado com abas Expedição/Recebimento identificado.');
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Erro ao processar arquivo.');
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Branch switching handler
+    window.changeActiveFilial = function(filial) {
+      window.currentFilial = filial;
+
+      const headerSel = document.getElementById('headerFilialSelect');
+      if (headerSel && headerSel.value !== filial) {
+        headerSel.value = filial;
+      }
+
+      const filialOptions = ['TODAS', 'Itajaí', 'Curitiba', 'Florianópolis', 'São Paulo'];
+      filialOptions.forEach(f => {
+        const pill = document.getElementById(`pillFilial${f}`);
+        if (pill) {
+          if (f === filial) {
+            pill.className = 'px-2.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold transition';
+          } else {
+            pill.className = 'px-2.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition';
+          }
+        }
+      });
+
+      const badge = document.getElementById('activeFilialBadgeMonthly');
+      if (badge) {
+        badge.innerText = filial === 'TODAS' ? 'Todas as Filiais (Consolidado)' : `Filial: ${filial}`;
+      }
+
+      addEvolutionLog(`Filtro de Filial alterado para: ${filial === 'TODAS' ? 'Consolidado Geral' : filial}.`, 'filter');
+      refreshApp();
+      updateLateralSnapshot();
+      showToast(`Visualizando dados: ${filial === 'TODAS' ? 'Todas as Filiais' : filial}`);
+    };
+
+    function getActiveProcessRecords() {
+      const all = window.appData[window.currentProcess] || [];
+      if (window.currentFilial === 'TODAS') {
+        return all;
+      }
+      return all.filter(r => (r.filial || 'Itajaí').toLowerCase() === window.currentFilial.toLowerCase());
+    }
+
     function getMonthlyAggregates() {
-      const records = window.appData[window.currentProcess] || [];
+      const records = getActiveProcessRecords();
       const monthsOrder = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
       const grouped = {};
 
       records.forEach(r => {
-        const m = r.mes || 'Agosto';
+        const m = r.mes || 'Setembro';
         if (!grouped[m]) {
           grouped[m] = { mes: m, valor: 0, nf: 0, uh: 0, skus: 0, itens: 0, count: 0 };
         }
@@ -1778,8 +1856,26 @@
     }
 
     function getSelectedMonthWeeks() {
-      const records = window.appData[window.currentProcess] || [];
+      const records = getActiveProcessRecords();
       const filtered = records.filter(r => (r.mes || '').toLowerCase() === (window.selectedMonth || '').toLowerCase());
+      
+      if (window.currentFilial === 'TODAS') {
+        const weekGrouped = {};
+        filtered.forEach(r => {
+          const num = parseInt(r.week || (r.semana ? r.semana.replace(/\D/g, '') : '1')) || 1;
+          const key = `Semana ${num}`;
+          if (!weekGrouped[key]) {
+            weekGrouped[key] = { semana: key, week: String(num), valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
+          }
+          weekGrouped[key].valor += Number(r.valor) || 0;
+          weekGrouped[key].nf += Number(r.nf) || 0;
+          weekGrouped[key].uh += Number(r.uh) || 0;
+          weekGrouped[key].skus += Number(r.skus) || 0;
+          weekGrouped[key].itens += Number(r.itens) || 0;
+        });
+        return Object.values(weekGrouped).sort((a, b) => Number(a.week) - Number(b.week));
+      }
+
       return filtered.sort((a, b) => {
         const numA = parseInt(a.week || (a.semana ? a.semana.replace(/\D/g, '') : '0')) || 0;
         const numB = parseInt(b.week || (b.semana ? b.semana.replace(/\D/g, '') : '0')) || 0;
@@ -1788,7 +1884,7 @@
     }
 
     function updateKPIs() {
-      const records = window.appData[window.currentProcess] || [];
+      const records = getActiveProcessRecords();
       const totalValor = records.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
       const totalNf = records.reduce((acc, r) => acc + (Number(r.nf) || 0), 0);
       const totalUh = records.reduce((acc, r) => acc + (Number(r.uh) || 0), 0);
@@ -2180,13 +2276,13 @@
       renderMonthlyCharts();
       renderMonthPills();
       renderWeeklyCharts();
+      updateLateralSnapshot();
       if (window.lucide) lucide.createIcons();
     }
 
-    // WMS Logic
     window.renderWmsDashboard = function() {
       const items = window.warehouseRawItems || [];
-      const totalCap = window.capFull + window.capHalf;
+      const totalCap = (window.capFull || 112) + (window.capHalf || 72);
 
       const searchInput = document.getElementById('globalSearchInput');
       const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -2206,7 +2302,6 @@
       const fullRate = window.capFull > 0 ? ((fullOccupied / window.capFull) * 100) : 0;
       const halfRate = window.capHalf > 0 ? ((halfOccupied / window.capHalf) * 100) : 0;
 
-      // KPI Displays
       const elTotOcc = document.getElementById('kpiTotalOccupied');
       const elTotCap = document.getElementById('kpiTotalCap');
       const elTotRate = document.getElementById('kpiTotalRate');
@@ -2372,7 +2467,7 @@
       const selectedAisle = aisleFilter ? aisleFilter.value : 'ALL';
       const searchQuery = document.getElementById('globalSearchInput') ? document.getElementById('globalSearchInput').value.toLowerCase().trim() : '';
 
-      let items = window.warehouseRawItems;
+      let items = window.warehouseRawItems || [];
       if (searchQuery) {
         items = items.filter(d => d.endereco.toLowerCase().includes(searchQuery));
       }
@@ -2532,8 +2627,8 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      const items = window.warehouseRawItems;
-      const totalCap = window.capFull + window.capHalf;
+      const items = window.warehouseRawItems || [];
+      const totalCap = (window.capFull || 112) + (window.capHalf || 72);
       const fullCount = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
       const halfCount = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
       const totalOcc = fullCount + halfCount;
@@ -2561,7 +2656,6 @@
       tbody.appendChild(tr);
     }
 
-    // Google Sheets WMS Synchronization
     window.syncWmsGoogleSheets = function(isSilent = false) {
       const syncIcon = document.getElementById('syncIcon');
       if (syncIcon) syncIcon.className = "fa-solid fa-arrows-rotate fa-spin text-xs";
@@ -2661,7 +2755,6 @@
       return 0;
     }
 
-    // Modal controls for Capacity & Parameters
     window.toggleConfigModal = function() {
       const modal = document.getElementById('configModal');
       if (modal) modal.classList.toggle('hidden');
@@ -2684,7 +2777,7 @@
     window.exportWmsCSV = function(type) {
       let csvContent = "data:text/csv;charset=utf-8,Centro de Distribuição,Full Ocupado,Meia Ocupado,Total Ocupado,Total Livre,Capacidade Total,% Ocupacao\n";
       const totalCap = window.capFull + window.capHalf;
-      const items = window.warehouseRawItems;
+      const items = window.warehouseRawItems || [];
       const sumFull = items.filter(d => d.tipo === "Posição Full" && d.counta > 0).length;
       const sumHalf = items.filter(d => d.tipo === "Meia Posição" && d.counta > 0).length;
       const totalOcc = sumFull + sumHalf;
@@ -2701,12 +2794,13 @@
       addEvolutionLog('Arquivo CSV de ocupação exportado.', 'download');
     };
 
-    // KPI CRUD and Actions
     window.openModalCreate = function() {
       document.getElementById('editRecordId').value = '';
       document.getElementById('modalRecordTitle').innerText = 'Novo Lançamento Spotlar';
       document.getElementById('formProcess').value = window.currentProcess;
+      document.getElementById('formFilial').value = window.currentFilial === 'TODAS' ? 'Itajaí' : window.currentFilial;
       document.getElementById('recordForm').reset();
+      document.getElementById('formFilial').value = window.currentFilial === 'TODAS' ? 'Itajaí' : window.currentFilial;
       document.getElementById('formMes').value = 'Setembro';
       document.getElementById('recordModal').classList.remove('hidden');
     };
@@ -2718,6 +2812,7 @@
 
       document.getElementById('editRecordId').value = rec.id;
       document.getElementById('modalRecordTitle').innerText = `Editar Lançamento (${proc === 'expedicao' ? 'Expedição' : 'Recebimento'})`;
+      document.getElementById('formFilial').value = rec.filial || 'Itajaí';
       document.getElementById('formProcess').value = proc;
       document.getElementById('formMes').value = rec.mes || 'Setembro';
       document.getElementById('formSemana').value = rec.semana || `Semana ${rec.week || 1}`;
@@ -2739,6 +2834,7 @@
     window.saveModalRecord = function(e) {
       e.preventDefault();
       const id = document.getElementById('editRecordId').value;
+      const filialVal = document.getElementById('formFilial').value;
       const proc = document.getElementById('formProcess').value;
       const semVal = document.getElementById('formSemana').value.trim();
       const wkMatch = semVal.match(/\d+/);
@@ -2747,6 +2843,7 @@
 
       const record = {
         id: id || `${proc}-${Date.now()}`,
+        filial: filialVal,
         mes: mesVal,
         semana: semVal.includes('Semana') ? semVal : `Semana ${semVal}`,
         week: wkNum,
@@ -2763,16 +2860,16 @@
       if (id) {
         const idx = window.appData[proc].findIndex(x => x.id === id);
         if (idx !== -1) window.appData[proc][idx] = record;
-        addEvolutionLog(`Registro editado em ${proc}: ${record.semana} (${record.mes}).`, 'edit');
+        addEvolutionLog(`Registro editado: ${record.filial} - ${record.semana} (${record.mes}).`, 'edit');
         showToast('Registro atualizado com sucesso!');
       } else {
         window.appData[proc].push(record);
-        addEvolutionLog(`Novo lançamento cadastrado em ${proc}: ${record.semana} (${record.mes}).`, 'plus');
-        showToast('Novo lançamento cadastrado com sucesso!');
+        addEvolutionLog(`Novo lançamento: ${record.filial} - ${record.semana} (${record.mes}).`, 'plus');
+        showToast(`Novo lançamento cadastrado para ${record.filial}!`);
       }
 
       window.selectedMonth = mesVal;
-      saveFirebaseData();
+      window.saveFirebaseData();
       closeModalRecord();
       refreshApp();
       if (!document.getElementById('manageDataModal').classList.contains('hidden')) {
@@ -2780,58 +2877,23 @@
       }
     };
 
-    window.deleteRecord = function(id, proc = window.currentProcess) {
-      if (!window.appData[proc]) return;
-      window.appData[proc] = window.appData[proc].filter(r => String(r.id) !== String(id));
-      saveFirebaseData();
-      refreshApp();
-      renderManageDataTable();
-      addEvolutionLog(`Registro excluído do processo ${proc}.`, 'delete');
-      showToast('Registro excluído com sucesso!');
-    };
-
-    window.openManageDataModal = function() {
-      window.manageActiveProcess = window.currentProcess;
-      setManageProcess(window.manageActiveProcess);
-      document.getElementById('manageDataModal').classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
-    };
-
-    window.closeManageDataModal = function() {
-      document.getElementById('manageDataModal').classList.add('hidden');
-    };
-
-    window.setManageProcess = function(proc) {
-      window.manageActiveProcess = proc;
-      const btnExp = document.getElementById('manageProcExpBtn');
-      const btnRec = document.getElementById('manageProcRecBtn');
-      const thUhs = document.getElementById('thManageUhs');
-
-      if (proc === 'expedicao') {
-        btnExp.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
-        btnRec.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
-        if (thUhs) thUhs.classList.remove('hidden');
-      } else {
-        btnRec.className = 'px-3 py-1 rounded-md font-bold bg-amber-400 text-slate-950';
-        btnExp.className = 'px-3 py-1 rounded-md font-semibold text-slate-600 dark:text-slate-300';
-        if (thUhs) thUhs.classList.add('hidden');
-      }
-      renderManageDataTable();
-    };
-
     window.renderManageDataTable = function() {
       const tbody = document.getElementById('manageTableBody');
       const filterMonth = document.getElementById('manageMonthFilter').value;
+      const filterFilial = document.getElementById('manageFilialFilter').value;
       if (!tbody) return;
       tbody.innerHTML = '';
 
       let list = window.appData[window.manageActiveProcess] || [];
+      if (filterFilial !== 'TODAS') {
+        list = list.filter(r => (r.filial || 'Itajaí').toLowerCase() === filterFilial.toLowerCase());
+      }
       if (filterMonth !== 'TODOS') {
         list = list.filter(r => (r.mes || '').toLowerCase() === filterMonth.toLowerCase());
       }
 
       if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 italic">Nenhum registro encontrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">Nenhum registro encontrado para este filtro.</td></tr>`;
         return;
       }
 
@@ -2841,7 +2903,12 @@
         const isExp = window.manageActiveProcess === 'expedicao';
         tr.innerHTML = `
           <td class="p-2.5">
-            <span class="font-bold text-slate-900 dark:text-white">${r.mes || 'Agosto'}</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300">
+              ${r.filial || 'Itajaí'}
+            </span>
+          </td>
+          <td class="p-2.5">
+            <span class="font-bold text-slate-900 dark:text-white">${r.mes || 'Setembro'}</span>
             <span class="text-[11px] block text-slate-400">${r.semana || `Semana ${r.week || 1}`}</span>
           </td>
           <td class="p-2.5 font-bold text-blue-600 dark:text-blue-400">R$ ${Number(r.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -2859,114 +2926,40 @@
       if (window.lucide) lucide.createIcons();
     };
 
-    window.limparApenasAgosto = function() {
-      let countRemoved = 0;
-      ['expedicao', 'recebimento'].forEach(proc => {
-        if (window.appData[proc]) {
-          const before = window.appData[proc].length;
-          window.appData[proc] = window.appData[proc].filter(r => (r.mes || '').toLowerCase().trim() !== 'agosto');
-          countRemoved += (before - window.appData[proc].length);
-        }
-      });
-      saveFirebaseData();
-      refreshApp();
-      renderManageDataTable();
-      addEvolutionLog(`Limpeza de dados de Agosto: ${countRemoved} itens removidos.`, 'clean');
-      showToast(`Registros de Agosto limpos (${countRemoved} excluídos)!`);
-    };
-
-    window.restoreDefaults = function() {
-      window.appData = JSON.parse(JSON.stringify(initialSpotlarData));
-      saveFirebaseData();
-      refreshApp();
-      addEvolutionLog('Base inicial de KPIs restaurada aos valores padrão.', 'restore');
-      showToast('Base restaurada com os dados oficiais!');
-    };
-
-    // Excel & CSV Multi-sheet Import / Export
     window.exportTwoSheets = function() {
       const wb = XLSX.utils.book_new();
 
       const dataExp = (window.appData.expedicao || []).map(e => ({
-        'Mês': e.mes, 'Week': e.week || e.semana, 'Notas': e.nf, "UH's": e.uh, "SKU's": e.skus, 'Itens': e.itens, 'Valor': e.valor, 'Docas': e.doca
+        'Filial': e.filial || 'Itajaí',
+        'Mês': e.mes,
+        'Week': e.week || e.semana,
+        'Notas': e.nf,
+        "UH's": e.uh,
+        "SKU's": e.skus,
+        'Itens': e.itens,
+        'Valor': e.valor,
+        'Docas': e.doca
       }));
       const wsExp = XLSX.utils.json_to_sheet(dataExp);
       XLSX.utils.book_append_sheet(wb, wsExp, 'Expedição');
 
       const dataRec = (window.appData.recebimento || []).map(r => ({
-        'Mês': r.mes, 'Week': r.week || r.semana, 'Notas': r.nf, "SKU's": r.skus, 'Itens': r.itens, 'Valor': r.valor, 'Docas': r.doca
+        'Filial': r.filial || 'Itajaí',
+        'Mês': r.mes,
+        'Week': r.week || r.semana,
+        'Notas': r.nf,
+        "SKU's": r.skus,
+        'Itens': r.itens,
+        'Valor': r.valor,
+        'Docas': r.doca
       }));
       const wsRec = XLSX.utils.json_to_sheet(dataRec);
       XLSX.utils.book_append_sheet(wb, wsRec, 'Recebimento');
 
-      XLSX.writeFile(wb, `Base_KPI_Spotlar_${new Date().toISOString().split('T')[0]}.xlsx`);
-      addEvolutionLog('Base de dados exportada em planilha Excel (.xlsx com 2 abas).', 'download');
-      showToast('Planilha com as 2 abas exportada com sucesso!');
+      XLSX.writeFile(wb, `Base_KPI_Spotlar_Multifiliais_${new Date().toISOString().split('T')[0]}.xlsx`);
+      addEvolutionLog('Planilha Excel exportada com coluna Filial.', 'download');
+      showToast('Planilha com dados de todas as filiais exportada com sucesso!');
     };
-
-    window.handleExcelUpload = function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      processDataFile(file);
-      event.target.value = '';
-    };
-
-    window.handleDragOver = function(e) {
-      e.preventDefault();
-      document.getElementById('dropZone').classList.add('border-amber-400', 'bg-amber-100/40');
-    };
-
-    window.handleDragLeave = function(e) {
-      e.preventDefault();
-      document.getElementById('dropZone').classList.remove('border-amber-400', 'bg-amber-100/40');
-    };
-
-    window.handleDrop = function(e) {
-      e.preventDefault();
-      handleDragLeave(e);
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        processDataFile(e.dataTransfer.files[0]);
-      }
-    };
-
-    function processDataFile(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          let importedExp = 0;
-          let importedRec = 0;
-
-          workbook.SheetNames.forEach(sheetName => {
-            const clean = sheetName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-            const sheet = workbook.Sheets[sheetName];
-            const rows = XLSX.utils.sheet_to_json(sheet);
-
-            if (clean.includes('exped') || clean.includes('saida') || clean.includes('outbound')) {
-              window.appData.expedicao = rows.map((r, i) => parseRow(r, 'exp', i)).filter(Boolean);
-              importedExp = window.appData.expedicao.length;
-            } else if (clean.includes('receb') || clean.includes('entrada') || clean.includes('inbound')) {
-              window.appData.recebimento = rows.map((r, i) => parseRow(r, 'rec', i)).filter(Boolean);
-              importedRec = window.appData.recebimento.length;
-            }
-          });
-
-          if (importedExp > 0 || importedRec > 0) {
-            saveFirebaseData();
-            refreshApp();
-            addEvolutionLog(`Planilha carregada: ${importedExp} expedições e ${importedRec} recebimentos.`, 'upload');
-            showToast(`Importação concluída: ${importedExp} expedições e ${importedRec} recebimentos!`);
-          } else {
-            showToast('Nenhum dado compatível identificado no arquivo.');
-          }
-        } catch (err) {
-          console.error(err);
-          showToast('Erro ao processar arquivo.');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
 
     function parseRow(row, prefix, idx) {
       const get = (keys) => {
@@ -2986,6 +2979,7 @@
         return Number(str) || 0;
       };
 
+      const filialRaw = get(['Filial', 'Unidade', 'CD', 'Branch']) || (window.currentFilial !== 'TODAS' ? window.currentFilial : 'Itajaí');
       const mes = get(['Mês', 'Mes', 'Month']) || 'Setembro';
       const semanaRaw = get(['Semana', 'Week', 'Semana Operacional']) || `Semana ${idx + 1}`;
       const numMatch = String(semanaRaw).match(/\d+/);
@@ -2993,6 +2987,7 @@
 
       return {
         id: `${prefix}-imp-${Date.now()}-${idx}`,
+        filial: String(filialRaw).trim(),
         mes: String(mes),
         semana: `Semana ${wkNum}`,
         week: String(wkNum),
@@ -3005,22 +3000,24 @@
       };
     }
 
-    // Reports: WhatsApp & Email Automation
     window.gerarRelatorioDiretoria = function() {
-      const expList = window.appData?.expedicao || [];
-      const recList = window.appData?.recebimento || [];
+      const expList = getActiveProcessRecords();
+      const recList = (window.appData.recebimento || []).filter(r => window.currentFilial === 'TODAS' ? true : (r.filial || 'Itajaí').toLowerCase() === window.currentFilial.toLowerCase());
+      
       const exp = expList.length ? expList[expList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
       const rec = recList.length ? recList[recList.length - 1] : { mes: 'Sem dados', week: '-', semana: 'Sem registros', valor: 0, nf: 0, uh: 0, skus: 0, itens: 0 };
 
+      const filialNome = window.currentFilial === 'TODAS' ? 'CONSOLIDADO GERAL (TODAS AS FILIAIS)' : `FILIAL ${window.currentFilial.toUpperCase()}`;
       const refPeriodo = exp.semana || `Semana ${exp.week}`;
       const refMes = exp.mes || 'Atual';
 
       const items = window.warehouseRawItems || [];
       const occTotal = items.filter(d => d.counta > 0).length;
-      const totalCap = window.capFull + window.capHalf;
+      const totalCap = (window.capFull || 112) + (window.capHalf || 72);
       const occRate = totalCap > 0 ? ((occTotal / totalCap) * 100).toFixed(1) : "0";
 
-      const mensagem = `🚀 *RELATÓRIO EXECUTIVO INTEGRADO - SPOTLAR LOGÍSTICA* 🚀\n` +
+      const mensagem = `🚀 *RELATÓRIO EXECUTIVO - SPOTLAR LOGÍSTICA* 🚀\n` +
+        `🏢 *Unidade:* ${filialNome}\n` +
         `🗓️ *Período:* ${refMes} - ${refPeriodo}\n\n` +
         `📦 *EXPEDIÇÃO (OUTBOUND)*\n` +
         `• *Valor Faturado:* R$ ${Number(exp.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
@@ -3031,10 +3028,11 @@
         `• *Valor Recebido:* R$ ${Number(rec.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n` +
         `• *Notas Fiscais:* ${rec.nf || 0} NFs | *SKU's:* ${rec.skus || 0}\n` +
         `• *Total de Itens:* ${Number(rec.itens || 0).toLocaleString('pt-BR')} peças\n\n` +
+        (window.currentFilial === 'TODAS' || window.currentFilial === 'Itajaí' ? 
         `🏭 *OCUPAÇÃO CD ITAJAÍ-SC*\n` +
         `• *Ocupação Geral:* ${occRate}%\n` +
         `• *Posições Ocupadas:* ${occTotal} / ${totalCap} posições\n` +
-        `• *Espaço Livre:* ${Math.max(0, totalCap - occTotal)} posições\n\n` +
+        `• *Espaço Livre:* ${Math.max(0, totalCap - occTotal)} posições\n\n` : '') +
         `📊 *Central Unificada Spotlar WMS & KPI*`;
 
       const tempTextarea = document.createElement('textarea');
@@ -3044,7 +3042,7 @@
       document.execCommand('copy');
       document.body.removeChild(tempTextarea);
 
-      addEvolutionLog('Relatório executivo gerado e copiado para WhatsApp.', 'share');
+      addEvolutionLog(`Relatório executivo (${filialNome}) gerado para WhatsApp.`, 'share');
       showToast('Relatório copiado! Abrindo WhatsApp...');
       window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`, '_blank');
     };
@@ -3179,10 +3177,11 @@
     window.copySlideContent = function() {
       const activeText = `SPOTLAR LOGÍSTICA - KPI OPERACIONAL\n` +
         `Processo Ativo: ${window.currentProcess.toUpperCase()}\n` +
-        `Valor: ${document.getElementById('kpiValorFaturado').innerText}\n` +
-        `Notas Fiscais: ${document.getElementById('kpiNotasFiscais').innerText}\n` +
-        `Mix de SKU's: ${document.getElementById('kpiSkus').innerText}\n` +
-        `Total de Itens: ${document.getElementById('kpiTotalItens').innerText}\n` +
+        `Filial: ${window.currentFilial}\n` +
+        `Valor: ${document.getElementById('kpiValorFaturado')?.innerText || ''}\n` +
+        `Notas Fiscais: ${document.getElementById('kpiNotasFiscais')?.innerText || ''}\n` +
+        `Mix de SKU's: ${document.getElementById('kpiSkus')?.innerText || ''}\n` +
+        `Total de Itens: ${document.getElementById('kpiTotalItens')?.innerText || ''}\n` +
         `Mês Ativo: ${window.selectedMonth}`;
 
       const el = document.createElement('textarea');
@@ -3196,7 +3195,7 @@
 
     window.runDiagnosticsTest = function() {
       addEvolutionLog('Executando autodiagnóstico de conexões...', 'test');
-      syncWmsGoogleSheets(true);
+      window.syncWmsGoogleSheets(true);
       setTimeout(() => {
         addEvolutionLog('Autodiagnóstico concluído: Todos os serviços operacionais.', 'check');
         showToast('Diagnóstico: Sistemas Spotlar 100% operacionais!');
@@ -3206,7 +3205,10 @@
     function showToast(msg, isError = false) {
       const container = document.getElementById('toastNotification');
       const toastInner = document.getElementById('toastInner');
-      document.getElementById('toastMsg').innerText = msg;
+      const msgEl = document.getElementById('toastMsg');
+      if (!container || !toastInner || !msgEl) return;
+
+      msgEl.innerText = msg;
 
       if (isError) {
         toastInner.className = "flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-semibold text-white bg-rose-600 border border-rose-500";
@@ -3220,15 +3222,14 @@
       }, 3500);
     }
 
-    // Window Initialization
     window.addEventListener('DOMContentLoaded', () => {
-      initTheme();
-      initFirebaseListener();
-      switchMainModule('kpi');
-      switchProcess('expedicao');
-      addEvolutionLog('Central Unificada Spotlar inicializada.', 'start');
+      window.initTheme();
+      window.initFirebaseListener();
+      window.switchMainModule('kpi');
+      window.switchProcess('expedicao');
+      window.addEvolutionLog('Central Unificada Spotlar inicializada.', 'check');
       setTimeout(() => {
-        syncWmsGoogleSheets(true);
+        window.syncWmsGoogleSheets(true);
       }, 800);
     });
   </script>
